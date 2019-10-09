@@ -10,6 +10,6 @@ https://www.learnopencv.com/multi-person-pose-estimation-in-opencv-using-openpos
 
 
 
-We must find more on the  HARPET (Hockey Action Recognition Pose Estimation, Temporal) dataset. I am not able to find it but it is publicly available?
+We must find more on the  HARPET (Hockey Action Recognition Pose Estimation, Temporal) dataset. I am not able to find it but it is publicly available? https://uwaterloo.ca/vision-image-processing-lab/research-demos
 
 

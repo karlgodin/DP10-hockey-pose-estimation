@@ -3,15 +3,16 @@ import sys
 f = open("youtubePenaltiesList.csv",'a')
 
 #Check number of arguments is 3
-if(len(sys.argv) != 5):
+if(len(sys.argv) != 6):
     print(len(sys.argv))
-    print("Wrong number of Args. Must be <Youtube URL> <start min:sec> <end min:sec> <Trip/CC/none>")
+    print("Wrong number of Args. Must be <Youtube URL> <start min:sec> <end min:sec> <Trip/CC/none> <0=Middle 1=Board>")
     exit(1)
     
 URL = sys.argv[1]
 startTime = sys.argv[2].split(':')
 endTime = sys.argv[3].split(':')
 penalty = sys.argv[4]
+boardLocation = sys.argv[5]
 
 #Process Start and End Times
 flag = 0
@@ -27,4 +28,4 @@ startTime = 60*int(startTime[0]) + int(startTime[1])
 endTime = 60*int(endTime[0]) + int(endTime[1])
 
 #Write to CSV
-f.write(URL +","+str(startTime)+","+str(endTime)+","+penalty+"\n")
+f.write(URL +","+str(startTime)+","+str(endTime)+","+penalty+","+boardLocation+"\n")

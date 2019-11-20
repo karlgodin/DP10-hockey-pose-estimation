@@ -27,4 +27,4 @@ startTime = 60*int(startTime[0]) + int(startTime[1])
 endTime = 60*int(endTime[0]) + int(endTime[1])
 
 #Write to CSV
-f.write(URL +","+str(startTime)+","+str(endTime)+","+penalty"\n")
+f.write(URL +","+str(startTime)+","+str(endTime)+","+penalty+"\n")

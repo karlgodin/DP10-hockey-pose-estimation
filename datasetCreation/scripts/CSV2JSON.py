@@ -101,4 +101,4 @@ if __name__ == "__main__":
     out["camera_shot_types"] = shotTypes
     out["video_description"] = videoInfo
     fout = open("../json/PHYT.json",'w')  
-    json.dump(out,fout,indent=4, sort_keys=False)
+    json.dump(out,fout,indent=4, sort_keys=True)

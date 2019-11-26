@@ -17,7 +17,8 @@ def main():
               "<Middle rink 0=Middle 1=Board> "
               "<has fighting 0=false 1=true> "
               "<only two players 0=false 1=true> "
-              "<has caption 0=false 1=true")
+              "<has caption 0=false 1=true"
+              "is separable 0=false 1=true")
         exit(1)
 
     URL = sys.argv[1]
@@ -30,6 +31,7 @@ def main():
     has_fighting = sys.argv[8]
     two_players = sys.argv[9]
     has_caption = sys.argv[10]
+    is_separable = sys.argv[11]
 
     #Process Start and End Times
     flag = 0
@@ -55,7 +57,8 @@ def main():
         middle_rink + "," +
         has_fighting + "," +
         two_players + "," +
-        has_caption  +
+        has_caption  + "," +
+        is_separable +
         "\n")
 
 if __name__ == "__main__":

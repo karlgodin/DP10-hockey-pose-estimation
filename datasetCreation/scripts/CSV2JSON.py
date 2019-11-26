@@ -23,14 +23,15 @@ class c_penalty:
         self.flags = flags.__dict__
 
 class c_flags:
-    def __init__(self,location,fighting,twoPlayers,caption):
+    def __init__(self,location,fighting,twoPlayers,caption,isSeparable):
         self.middle_rink = True if location else False
         self.has_fighting = True if fighting else False
         self.two_players = True if twoPlayers else False
         self.has_caption = True if caption else False
+        self.isSeperable = (True if isSeparable else False) if isSeparable != 2 else None
+
 class c_video:
-    def __init__(self,url,resolution):
-        self.url = url
+    def __init__(self,resolution):
         self.video_resolution = resolution
         self.penalties = []
 
@@ -39,10 +40,13 @@ if __name__ == "__main__":
     #Read in CSV
     
     videoIdx = 0
+    videoIdx = 0
     clipIdx = 0
-    videoList = {}
     videoInfo = {}
     numberOfPenaltyClipByType = {i : 0 for i in range(len(labels))}
+    countOnly2Players = 0
+    videosWithOnly2Players = []
+
     for filename in files:
         #CSV file
         if filename.endswith(".csv"):
@@ -59,26 +63,35 @@ if __name__ == "__main__":
                 fighting = int(content[7])
                 twoPlayers = int(content[8])
                 caption = int(content[9])
+
+                if len(content) == 10 : # for PHYT2.0
+                    isSeparable = 2     #unspecified
+                else :
+                    isSeparable = int(content[10])
                                 
-                flags = c_flags(location,fighting,twoPlayers,caption)
+                flags = c_flags(location,fighting,twoPlayers,caption,isSeparable)
+
                 penalty = c_penalty(clipIdx,start,end,label,camera,flags)
+
+                if twoPlayers == 1:
+                    countOnly2Players += 1
+                    videosWithOnly2Players.append(clipIdx)
+
                 clipIdx = clipIdx + 1
                 
                 #Check if Key is not in dictionary
-                if (URL not in videoList):
-                    video = c_video(URL,resolution)
-                    videoName = "video_" + '%04d' % videoIdx
-                    videoList[URL] = videoName
+                if (URL not in videoInfo):
+                    video = c_video(resolution)
                     
                     #Create new video info entry
-                    videoInfo[videoName]= video.__dict__
+                    videoInfo[URL]= video.__dict__
                     
                     videoIdx = videoIdx + 1
                 else:
-                    videoName = videoList[URL]
+                    videoName = videoInfo[URL]
                 
                    
-                videoInfo[videoName]['penalties'].append(penalty.__dict__)
+                videoInfo[URL]['penalties'].append(penalty.__dict__)
         
                 #Update Statistics
                 numberOfPenaltyClipByType[label] +=1 
@@ -93,10 +106,11 @@ if __name__ == "__main__":
     datasetDescription['NumOfPenaltyClips'] = clipIdx
     temp_NumberOfPenaltyClipByType = { labels[i] : numberOfPenaltyClipByType[i] for i in range(len(labels))}
     datasetDescription['NumOfPenaltyClipsByType'] = temp_NumberOfPenaltyClipByType
+    temp_numberPlayers = {"count": countOnly2Players, "video_ids": videosWithOnly2Players}
+    datasetDescription["videosWithOnly2Players"] = temp_numberPlayers
     
     out = {}
     out['dataset_description'] = datasetDescription
-    out["video_ID"] = videoList
     out["labels"] = labels
     out["camera_shot_types"] = shotTypes
     out["video_description"] = videoInfo

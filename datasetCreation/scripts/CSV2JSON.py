@@ -106,7 +106,7 @@ if __name__ == "__main__":
     datasetDescription['NumOfPenaltyClips'] = clipIdx
     temp_NumberOfPenaltyClipByType = { labels[i] : numberOfPenaltyClipByType[i] for i in range(len(labels))}
     datasetDescription['NumOfPenaltyClipsByType'] = temp_NumberOfPenaltyClipByType
-    temp_numberPlayers = {"count": countOnly2Players, "video_ids": videosWithOnly2Players}
+    temp_numberPlayers = {"count": countOnly2Players, "clip_IDs": videosWithOnly2Players}
     datasetDescription["videosWithOnly2Players"] = temp_numberPlayers
     
     out = {}

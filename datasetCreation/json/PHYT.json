@@ -13,8 +13,7 @@
         },
         "NumOfVideos": 21,
         "videosWithOnly2Players": {
-            "count": 10,
-            "video_ids": [
+            "clip_IDs": [
                 3,
                 6,
                 13,
@@ -25,7 +24,8 @@
                 54,
                 57,
                 59
-            ]
+            ],
+            "count": 10
         }
     },
     "labels": {

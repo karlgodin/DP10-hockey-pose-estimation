@@ -7,18 +7,18 @@ def main():
     #Check number of arguments is 3
     if(len(sys.argv) != 12):
         print(len(sys.argv))
-        print("Wrong number of Args. Must be "
-              "<Youtube URL> "
-              "<video resolution> "
-              "<start min:sec> "
-              "<end min:sec> "
-              "<label: 0=Trip 1=CC 2=none> "
-              "<camera shot type 0=short 1=med 2=long> "
-              "<Middle rink 0=Middle 1=Board> "
-              "<has fighting 0=false 1=true> "
-              "<only two players 0=false 1=true> "
-              "<has caption 0=false 1=true"
-              "is separable 0=false 1=true")
+        print("Wrong number of Args. Must be: "
+              "1. <Youtube URL>\n "
+              "2. <video resolution>\n "
+              "3. <start min:sec>\n "
+              "4. <end min:sec>\n"
+              "5. <label: 0=Trip 1=CC 2=none>\n"
+              "6. <camera shot type 0=short 1=med 2=long>\n"
+              "7. <Middle rink 0=Middle 1=Board>\n"
+              "8. <has fighting 0=false 1=true>\n"
+              "9. <only two players 0=false 1=true>\n"
+              "10. <has caption 0=false 1=true>\n"
+              "11. <is separable 0=false 1=true>\n")
         exit(1)
 
     URL = sys.argv[1]

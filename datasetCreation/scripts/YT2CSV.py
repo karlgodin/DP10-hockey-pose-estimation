@@ -5,7 +5,7 @@ def main():
     f = open("..\csv\youtubePenaltiesList.csv",'a')
 
     #Check number of arguments is 3
-    if(len(sys.argv) != 11):
+    if(len(sys.argv) != 12):
         print(len(sys.argv))
         print("Wrong number of Args. Must be "
               "<Youtube URL> "

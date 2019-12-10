@@ -35,16 +35,16 @@ def main():
 
     #Process Start and End Times
     flag = 0
-    if(len(startTime) != 2):
-        print("Start Time must be in format min:sec")
+    if(len(startTime) != 3):
+        print("Start Time must be in format hr:min:sec")
         flag = 1
-    if(len(endTime) != 2):
-        print("End Time must be in format min:sec")
+    if(len(endTime) != 3):
+        print("End Time must be in format hr:min:sec")
         flag = 1
     if(flag == 1):
         exit(1)
-    startTime = 60*int(startTime[0]) + int(startTime[1])
-    endTime = 60*int(endTime[0]) + int(endTime[1])
+    startTime = 3600*int(startTime[0]) + 60*int(startTime[1]) + int(startTime[2])
+    endTime = 3600*int(endTime[0]) + 60*int(endTime[1]) + int(endTime[2])
 
     #Write to CSV
     f.write(

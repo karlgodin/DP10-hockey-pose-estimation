@@ -40,6 +40,8 @@ if __name__ == "__main__" :
         if(OS == "WINDOWS"):
             os.system('youtube-dl.exe ' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')
         elif(OS == "LINUX"):
-            os.system('youtube-dl' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')
+            command = 'youtube-dl ' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4'
+            print(command)
+            #os.system('youtube-dl' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')
         
         

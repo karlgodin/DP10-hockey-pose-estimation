@@ -23,7 +23,7 @@ if __name__ == "__main__" :
     #Fetch number of videos for stats display
     numOfVids = data['dataset_description']['NumOfVideos']
     
-    for i,keys in enumerate(data['video_ID'].keys()):
+    for i,keys in enumerate(data['video_description'].keys()):
         url = 'https://www.youtube.com/watch?v=' + keys
         print("Downloading video #" + str(i+1) + " of " + str(numOfVids))
         os.system('youtube-dl.exe ' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')

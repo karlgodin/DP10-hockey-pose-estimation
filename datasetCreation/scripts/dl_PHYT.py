@@ -40,11 +40,6 @@ if __name__ == "__main__" :
         if(OS == "WINDOWS"):
             os.system('youtube-dl.exe ' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')
         elif(OS == "LINUX"):
-            ydl_opts = {
-                'format': 'mp4',
-                'outtmpl ': '../Videos/%(id)s.%(ext)s'
-            }
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
+            os.system('youtube-dl' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')
         
         

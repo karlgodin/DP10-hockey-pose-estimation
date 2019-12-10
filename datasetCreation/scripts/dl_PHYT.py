@@ -1,10 +1,19 @@
 from __future__ import unicode_literals
 import json
 import sys
-import youtube_dl
+import youtube_dl #pip install youtube_dl
 import os
+from sys import platform as _platform
 
-
+def checkOS():
+    if _platform == "linux" or _platform == "linux2":
+       return "LINUX"
+    elif _platform == "darwin":
+       return "MACOS"
+    elif _platform == "win32" or _platform == "win64":
+       return "WINDOWS"
+    else:
+        raise("OS not supported")
 
 if __name__ == "__main__" :
     if(len(sys.argv) > 2):
@@ -15,6 +24,8 @@ if __name__ == "__main__" :
     else:
         json_filepath = "../json/PHYT.json"
         
+    #Check OS
+    OS = checkOS()
     
     #Fetch JSON data
     json_file = open(json_filepath)
@@ -26,8 +37,14 @@ if __name__ == "__main__" :
     for i,keys in enumerate(data['video_description'].keys()):
         url = 'https://www.youtube.com/watch?v=' + keys
         print("Downloading video #" + str(i+1) + " of " + str(numOfVids))
-        os.system('youtube-dl.exe ' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')
-    
-    
-    
-    
+        if(OS == "WINDOWS"):
+            os.system('youtube-dl.exe ' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')
+        elif(OS == "LINUX"):
+            ydl_opts = {
+                'format': 'mp4',
+                'output ': '../Videos/%(id)s.%(ext)s'
+            }
+            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+        
+        

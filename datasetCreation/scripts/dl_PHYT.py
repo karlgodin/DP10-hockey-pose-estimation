@@ -42,7 +42,7 @@ if __name__ == "__main__" :
         elif(OS == "LINUX"):
             ydl_opts = {
                 'format': 'mp4',
-                'output ': '../Videos/%(id)s.%(ext)s'
+                'outtmpl ': '../Videos/%(id)s.%(ext)s'
             }
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])

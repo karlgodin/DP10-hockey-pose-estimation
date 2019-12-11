@@ -129,6 +129,8 @@ if __name__ == "__main__":
             fin = open(filename,'r')
             for line in fin:
                 content = line.split(',')
+                if len(content) == 1: #Is a newline
+                    continue
                 URL = content[0].split('=')[1].split('&')[0]
                 if URL not in URL2CHANNELS:
                     URL2CHANNELS[URL] = ytvi.getChannelName(URL)
@@ -156,6 +158,9 @@ if __name__ == "__main__":
                 fin = open(filename,'r')
                 for line in fin:
                     content = line.split(',')
+                    if len(content) == 1: #Is a newline
+                        continue
+                    
                     URL = content[0].split('=')[1].split('&')[0]
                     resolution = int(content[1])
                     start = int(content[2])

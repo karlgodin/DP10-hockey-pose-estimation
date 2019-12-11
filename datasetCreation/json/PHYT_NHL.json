@@ -3,11 +3,11 @@
         "statisticsByLabel": {
             "Tripping": {
                 "twoPlayers": 2,
-                "seperable": 29,
+                "seperable": 30,
                 "HD": 2,
                 "middleOfRink": 31,
-                "twoPlayersOrSeperable": 29,
-                "twoPlayersOrSeperableAndHDAndMiddle": 0,
+                "twoPlayersOrSeperable": 30,
+                "twoPlayersOrSeperableAndHDAndMiddle": 1,
                 "numOfClips": 54
             },
             "Cross-Checking": {
@@ -21,21 +21,21 @@
             },
             "No Penalty": {
                 "twoPlayers": 2,
-                "seperable": 12,
+                "seperable": 19,
                 "HD": 11,
                 "middleOfRink": 21,
-                "twoPlayersOrSeperable": 12,
-                "twoPlayersOrSeperableAndHDAndMiddle": 0,
+                "twoPlayersOrSeperable": 19,
+                "twoPlayersOrSeperableAndHDAndMiddle": 7,
                 "numOfClips": 25
             }
         },
         "statisticsDataset": {
             "twoPlayers": 5,
-            "seperable": 48,
+            "seperable": 56,
             "HD": 13,
             "middleOfRink": 65,
-            "twoPlayersOrSeperable": 48,
-            "twoPlayersOrSeperableAndHDAndMiddle": 0,
+            "twoPlayersOrSeperable": 56,
+            "twoPlayersOrSeperableAndHDAndMiddle": 8,
             "numOfClips": 99,
             "YoutubeVideos": {
                 "items": [
@@ -109,7 +109,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": true
                     }
                 },
                 {
@@ -123,7 +123,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": true
                     }
                 },
                 {
@@ -137,7 +137,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": true
                     }
                 }
             ]
@@ -156,7 +156,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": false
                     }
                 },
                 {
@@ -170,7 +170,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": true
                     }
                 },
                 {
@@ -184,7 +184,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": false
                     }
                 },
                 {
@@ -198,7 +198,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": true
                     }
                 }
             ]
@@ -217,7 +217,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": true
                     }
                 },
                 {
@@ -231,7 +231,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": false
                     }
                 },
                 {
@@ -245,7 +245,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": true
                     }
                 }
             ]
@@ -264,7 +264,7 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": null
+                        "isSeperable": true
                     }
                 }
             ]

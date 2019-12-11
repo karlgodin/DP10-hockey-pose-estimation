@@ -55,7 +55,7 @@ class c_statistics:
         self.middleOfRink = 0
         self.twoPlayersOrSeperable = 0
         self.twoPlayersOrSeperableAndHDAndMiddle = 0
-        self.count = 0
+        self.numOfClips = 0
         
     def update1(self, clipID, resolution,penalty):
         tempFlags = penalty.flags
@@ -81,7 +81,7 @@ class c_statistics:
         if((tempFlags.two_players or tempFlags.isSeperable) and resolution > 480 and tempFlags.middle_rink):
             self.twoPlayersOrSeperableAndHDAndMiddle += 1
         
-        self.count += 1
+        self.numOfClips += 1
         
 class c_datasetStatistics(c_statistics):
     def __init__(self):
@@ -209,8 +209,6 @@ if __name__ == "__main__":
         
         #Build Dataset Description
         datasetDescription = {}
-        datasetDescription['NumOfVideos'] = videoIdx 
-        datasetDescription['NumOfPenaltyClips'] = clipIdx
         datasetDescription["statisticsByLabel"] = { labels[i] : statsByType[i].__dict__ for i in range(len(labels))}
         statsWholeDataSet.YoutubeVideos = statsWholeDataSet.YoutubeVideos.__dict__
         datasetDescription["statisticsDataset"] = statsWholeDataSet.__dict__

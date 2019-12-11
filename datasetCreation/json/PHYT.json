@@ -1,7 +1,5 @@
 {
     "dataset_description": {
-        "NumOfVideos": 19,
-        "NumOfPenaltyClips": 57,
         "statisticsByLabel": {
             "Tripping": {
                 "twoPlayers": 5,
@@ -10,7 +8,7 @@
                 "middleOfRink": 16,
                 "twoPlayersOrSeperable": 5,
                 "twoPlayersOrSeperableAndHDAndMiddle": 2,
-                "count": 19
+                "numOfClips": 19
             },
             "Cross-Checking": {
                 "twoPlayers": 3,
@@ -19,7 +17,7 @@
                 "middleOfRink": 11,
                 "twoPlayersOrSeperable": 3,
                 "twoPlayersOrSeperableAndHDAndMiddle": 0,
-                "count": 21
+                "numOfClips": 21
             },
             "No Penalty": {
                 "twoPlayers": 6,
@@ -28,7 +26,7 @@
                 "middleOfRink": 9,
                 "twoPlayersOrSeperable": 8,
                 "twoPlayersOrSeperableAndHDAndMiddle": 4,
-                "count": 17
+                "numOfClips": 17
             }
         },
         "statisticsDataset": {
@@ -38,7 +36,7 @@
             "middleOfRink": 36,
             "twoPlayersOrSeperable": 16,
             "twoPlayersOrSeperableAndHDAndMiddle": 6,
-            "count": 57,
+            "numOfClips": 57,
             "YoutubeVideos": {
                 "items": [
                     "RqmmjdbrboE",

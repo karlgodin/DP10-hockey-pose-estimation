@@ -134,7 +134,8 @@ if __name__ == "__main__":
                 URL = content[0].split('=')[1].split('&')[0]
                 if URL not in URL2CHANNELS:
                     URL2CHANNELS[URL] = ytvi.getChannelName(URL)
-                    print("Found channel for " + URL + ": " + URL2CHANNELS[URL])
+                    if(URL2CHANNELS[URL] != -1):
+                        print("Found channel for " + URL + ": " + URL2CHANNELS[URL])
                     
     with open(file_path,'w') as f:
         json.dump(URL2CHANNELS,f,indent=4, sort_keys=False)
@@ -172,6 +173,8 @@ if __name__ == "__main__":
                     twoPlayers = int(content[8])
                     caption = int(content[9])
                     
+                    if(URL2CHANNELS[URL] is -1):
+                        continue
                     if(YoutubeChannel is "" and URL2CHANNELS[URL] in args['c']):
                         continue
                     if(YoutubeChannel is not "" and YoutubeChannel != URL2CHANNELS[URL] ):

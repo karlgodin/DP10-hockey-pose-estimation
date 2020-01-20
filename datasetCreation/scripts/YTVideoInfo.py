@@ -68,7 +68,10 @@ def getVideoInfo(VideoID,dump):
 
 def getChannelName(VideoID):
     video_details = getVideoInfo(VideoID,False)
-    return video_details['CHANNEL_NAME']   
+    if('CHANNEL_NAME' in video_details):
+        return video_details['CHANNEL_NAME']   
+    else:
+        return -1
 
     
 if __name__ == "__main__":

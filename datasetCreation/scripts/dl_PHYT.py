@@ -32,7 +32,7 @@ if __name__ == "__main__" :
     data = json.load(json_file)
     
     #Fetch number of videos for stats display
-    numOfVids = data['dataset_description']['NumOfVideos']
+    numOfVids = data['dataset_description']['statisticsDataset']['YoutubeVideos']['count']
     
     for i,keys in enumerate(data['video_description'].keys()):
         url = 'https://www.youtube.com/watch?v=' + keys

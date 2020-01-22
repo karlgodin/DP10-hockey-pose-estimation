@@ -145,8 +145,8 @@ if __name__ == "__main__":
     else:
         args['c'] = [""]
     
+    clipIdx = 0
     for YoutubeChannel in args['c']:
-        clipIdx = 0
         videoIdx = 0
         videoInfo = {}
         numberOfPenaltyClipByType = {i : 0 for i in range(len(labels))}

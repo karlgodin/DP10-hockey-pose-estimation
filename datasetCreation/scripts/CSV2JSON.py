@@ -17,7 +17,8 @@ shotTypes = {
 }
 
 class c_penalty:
-    def __init__(self,ID,start,end,label,camera,flags):
+    def __init__(self,globalClipID,ID,start,end,label,camera,flags):
+        self.global_clip_ID = globalClipID
         self.clip_ID = ID
         self.start_time = start
         self.end_time = end
@@ -134,8 +135,7 @@ if __name__ == "__main__":
                 URL = content[0].split('=')[1].split('&')[0]
                 if URL not in URL2CHANNELS:
                     URL2CHANNELS[URL] = ytvi.getChannelName(URL)
-                    if(URL2CHANNELS[URL] != -1):
-                        print("Found channel for " + URL + ": " + URL2CHANNELS[URL])
+                    print("Found channel for " + URL + ": " + URL2CHANNELS[URL])
                     
     with open(file_path,'w') as f:
         json.dump(URL2CHANNELS,f,indent=4, sort_keys=False)
@@ -145,9 +145,11 @@ if __name__ == "__main__":
     else:
         args['c'] = [""]
     
-    clipIdx = 0
+    
+    g_clip_idx = 0    
     for YoutubeChannel in args['c']:
         videoIdx = 0
+        clipIdx = 0
         videoInfo = {}
         numberOfPenaltyClipByType = {i : 0 for i in range(len(labels))}
         statsByType = {i : c_statistics() for i in range(len(labels))}
@@ -173,8 +175,6 @@ if __name__ == "__main__":
                     twoPlayers = int(content[8])
                     caption = int(content[9])
                     
-                    if(URL2CHANNELS[URL] is -1):
-                        continue
                     if(YoutubeChannel is "" and URL2CHANNELS[URL] in args['c']):
                         continue
                     if(YoutubeChannel is not "" and YoutubeChannel != URL2CHANNELS[URL] ):
@@ -187,9 +187,11 @@ if __name__ == "__main__":
                                     
                     flags = c_flags(location,fighting,twoPlayers,caption,isSeparable)
 
-                    penalty = c_penalty(clipIdx,start,end,label,camera,flags)
+                    penalty = c_penalty(g_clip_idx,clipIdx,start,end,label,camera,flags)
 
                     clipIdx = clipIdx + 1
+                    
+                    g_clip_idx = g_clip_idx + 1
                     
                     #Check if Key is not in dictionary
                     if (URL not in videoInfo):

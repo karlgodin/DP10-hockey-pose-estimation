@@ -108,6 +108,7 @@ if __name__ == "__main__":
         frameSave = None
         lastFrame = False
         paused = False
+	restart = False
         print "/".join(clipName.split('/')[2:])
         while(cap.isOpened()):
             jumpNumOfFrames = 0            
@@ -220,6 +221,7 @@ if __name__ == "__main__":
             filenamesToDelete.append(filename)
             continue
     for filename in filenamesToDelete:
+	print("Deleting %s"%filename)
         del out[filename]
     
     #Save to file
@@ -281,6 +283,7 @@ if __name__ == "__main__":
         out_trimmedVid.release()
         
     for filename in filenamesToDelete:
+	print("Deleting entry for: %s"%filename)
         del outTrimmed[filename]
     #create outTrimmed.json
     with open(outpathTrimmed,'w') as f:

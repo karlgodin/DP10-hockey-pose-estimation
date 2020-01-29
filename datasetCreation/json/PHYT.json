@@ -459,8 +459,8 @@
                 {
                     "global_clip_ID": 122,
                     "clip_ID": 23,
-                    "start_time": 26,
-                    "end_time": 31,
+                    "start_time": 31,
+                    "end_time": 34,
                     "label": 0,
                     "camera_shot": 0,
                     "flags": {

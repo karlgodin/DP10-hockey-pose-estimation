@@ -1062,7 +1062,7 @@
                     "global_clip_ID": 54,
                     "clip_ID": 54,
                     "start_time": 4883,
-                    "end_time": 10887,
+                    "end_time": 4886,
                     "label": 2,
                     "camera_shot": 0,
                     "flags": {
@@ -1507,7 +1507,7 @@
                     "global_clip_ID": 80,
                     "clip_ID": 80,
                     "start_time": 369,
-                    "end_time": 369,
+                    "end_time": 371,
                     "label": 0,
                     "camera_shot": 1,
                     "flags": {

@@ -13,6 +13,7 @@ import numpy as np
 import copy
 
 DP10_OPENPOSE_RESULTS_FOLDER = "../openposeResults/"
+DP10_OUTPUT_FOLDER = "../FilteredPoses/"
 DP10_TRIMMED_FOLDER = '../Clips/Trimmed/'
 DP10_CLIPS_FOLDER = '../Clips/'
 DP10_POSE_THRESHOLD_COEFF = 2
@@ -126,7 +127,10 @@ def findPoseElucianDistance(pose1,pose2):
     pass
 
 def chunker(seq, size):
-    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+    if(seq is not None):
+        return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+    else:
+        return []
 
 def displayPlayer(frame, pose,color = (255,0,0)):
     """
@@ -306,8 +310,9 @@ def distancePoses(pose1,pose2):
 
 if __name__ == '__main__':
     for dir in os.listdir(DP10_OPENPOSE_RESULTS_FOLDER):
-        for d in os.listdir(DP10_OPENPOSE_RESULTS_FOLDER + dir):
-            testName = "%s/%s.mp4"%(dir,d)
+        for clipID in os.listdir(DP10_OPENPOSE_RESULTS_FOLDER + dir):
+            testName = "%s/%s.mp4"%(dir,clipID)
+            print(testName)
             #testName = 'PHYT/_44.mp4'
             clipName = testName.split('.')[0].split('/')[1]
             testOpenpose = DP10_OPENPOSE_RESULTS_FOLDER + testName.split('.')[0] + '/output_jsn/'
@@ -318,6 +323,9 @@ if __name__ == '__main__':
                 clipInfo = json.load(f)
 
             cap = cv2.VideoCapture(testTrimmed)
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             clipSave = []
             p1,p2 = None, None
             p1Changed,p2Changed = None, None
@@ -523,10 +531,10 @@ if __name__ == '__main__':
                     frame = displayPlayer(frame, pose1,color = (255,0,0))
                 if(pose2 is not None):
                     frame = displayPlayer(frame, pose2,color = (0,255,0))
-                for notInvolvedPlayer in NIP:
-                    frame = displayPlayer(frame,notInvolvedPlayer['pose_keypoints_2d'],color=(0,0,255))
-                for p in pdd:
-                    frame = displayPlayer(frame,p,color=(0,255,255))
+                # for notInvolvedPlayer in NIP:
+                    # frame = displayPlayer(frame,notInvolvedPlayer['pose_keypoints_2d'],color=(0,0,255))
+                # for p in pdd:
+                    # frame = displayPlayer(frame,p,color=(0,255,255))
                 
                 #=============
                 #Display Image
@@ -546,6 +554,31 @@ if __name__ == '__main__':
                             idx -= 2
                         break
                     elif(k == ord('n')):
+                        nextVid = True
+                        break
+                    elif(k == ord('s')):
+                        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+                        print(DP10_OUTPUT_FOLDER + dir)
+                        if(not os.path.exists(os.path.dirname(DP10_OUTPUT_FOLDER + dir+ '/'))):
+                            os.makedirs(os.path.dirname(DP10_OUTPUT_FOLDER + dir + '/'))
+                        if(not os.path.exists(os.path.dirname(DP10_OUTPUT_FOLDER + dir +'/%s'%clipID+'/filtered_json/'))):
+                            os.makedirs(os.path.dirname(DP10_OUTPUT_FOLDER + dir +'/%s'%clipID+ '/filtered_json/'))
+                        if(not os.path.exists(os.path.dirname(DP10_OUTPUT_FOLDER + dir+'/%s'%clipID+ '/filtered_vid/'))):
+                            os.makedirs(os.path.dirname(DP10_OUTPUT_FOLDER + dir +'/%s'%clipID+ '/filtered_vid/'))
+                        out = cv2.VideoWriter(DP10_OUTPUT_FOLDER + dir +'/%s'%clipID+ '/filtered_vid/' + '/%s.mp4'%clipID,fourcc, fps, (width,height))
+                        outJson = []
+                        for frameToSave in clipSave:
+                            tempDict = {}
+                            tempDict['frameNum'] = frameToSave.frameNum
+                            tempDict['perp'] = frameToSave.pose1
+                            tempDict['victim'] = frameToSave.pose2
+                            outJson.append(tempDict)
+                            out.write(frameToSave.frame)
+                        
+                        out.release()
+                        
+                        with open(DP10_OUTPUT_FOLDER + dir +'/%s'%clipID+ '/filtered_json/%s.json'%clipID, 'w', encoding='utf-8') as f:
+                            json.dump(outJson, f, ensure_ascii=False, indent=4)
                         nextVid = True
                         break
                     elif(k == ord('q')):

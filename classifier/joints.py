@@ -1,14 +1,9 @@
 import json
 import numpy as np
 
+#TODO add variable frame length compatibility
 n_frames = 15
 
-"""
-class body_joint:
-
-    def __init__(self):
-
-"""
 def parse_clip():
     with open("example_pose.json") as json_file:
         data = json.load(json_file)
@@ -20,50 +15,61 @@ def parse_clip():
             perp = frame["perp"]
             victim = frame["victim"]
 
-            del perp[2::3]
-            del victim[2::3]
+            # TODO: add boolean to keep or remove confidence parameter
+            # del perp[2::3]
+            # del victim[2::3]
 
             perp_frames.append(perp)
             victim_frames.append(victim)
 
-        perp_frames = np.array(perp_frames)
-        victim_frames = np.array(victim_frames)
+        perp_frames = get_joints(np.array(perp_frames))
 
-        # transforming the inputs to have the joints in time for all frames
+        victim_frames = get_joints(np.array(victim_frames))
 
-        perp_info = get_joints(perp_frames)
-        victim_info = get_joints(victim_frames)
+        return perp_frames, victim_frames
 
-        shape_perp = perp_info.shape
-        shape_victim = victim_info.shape
-        print("done")
 
-    # TODO make it an 2D array
-def get_joints(player_frames: list):
-    # stores the player in 1d array
-    all_bodies = []
-    i = 0
-    j = 1
+"""
+Returns a 2D numpy array formatted according to the Interaction Recognition paper
+Each row contains temporal information for one joint 
 
-    # x = number of frames
-    # y = number of points for the body (50 for the 25-body)
-    x, y = player_frames.shape
+Input array:
+[[ x_00, y_00, c_00, ... , x_n0, y_n0, c_n0 ],
+ [ x_01, y_01, c_01, ... , x_n1, y_n1, c_n1 ],
+ [                   ...                    ],
+ [ x_0t, y_0t, c_0t, ... , x_nt, y_nt, c_nt ]]
+ 
+Output array:
+[[ x_00, y_00, c_00, ... , x_0t, y_0t, c_0t, 0 ],
+ [ x_10, y_10, c_10, ... , x_1t, y_1t, c_1t, 1 ],
+ [                   ...                       ],
+ [ x_n0, y_n0, c_n0, ... , x_nt, y_nt, c_nt, 24 ]]
 
-    # for i+2 and j+2 so it iterates over all body parts and gets the coordinates
-    while j < y:
-        coordinates_of_body_part = player_frames[:, [i, j]]
-        coordinates_of_body_part = coordinates_of_body_part.flatten()
-        body_part_index = int(i/2)
-        coordinates_of_body_part = np.append(coordinates_of_body_part, body_part_index)
-        all_bodies = np.append(all_bodies, coordinates_of_body_part)
+"""
+def get_joints(player_frames : np.ndarray):
+    # Obtain an array for each data point type
+    player_x = player_frames[:, 0::3]
+    player_y = player_frames[:, 1::3]
+    player_c = player_frames[:, 2::3]
 
-        i = i + 2
-        j = j + 2
-    return all_bodies
+    # Create an empty array with appropriate size
+    player_frames = np.empty((player_frames.shape[0] * 3, 25), dtype=player_frames.dtype)
+
+    # Merge data points into a single 2D array
+    player_frames[0::3] = player_x
+    player_frames[1::3] = player_y
+    player_frames[2::3] = player_c
+
+    # Add body part information to each row and transpose the array such that each row
+    # contains x_n0,y_n0,c_n0, ... x_nt, y_nt, c_nt where n is the row number and t is the frame number
+    player_frames = np.append(player_frames, np.reshape(np.arange(25), (1,25)), axis=0)
+
+    return np.transpose(player_frames)
 
 
 def main():
     parse_clip()
+    print('done')
 
 
 if __name__ == "__main__":

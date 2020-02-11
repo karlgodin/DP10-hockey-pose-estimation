@@ -11,6 +11,7 @@ import json
 import cv2
 import numpy as np
 import pandas as pd
+import shutil
 import copy
 
 DP10_OPENPOSE_RESULTS_FOLDER = "../openposeResults/"
@@ -22,7 +23,10 @@ DP10_TTL_POSES = 10
 DP10_THRESHOLD = 250
 DP10_MIN_NUM_OF_JOINTS = 10
 DP10_DO_INTERPOLATION = True
-DP10_INTERPOLATION = 'linear'
+DP10_DISPLAY_NON_INVOLVED = True
+DP10_DISPLAY_BOUNDING_BOX = True
+DP10_DISPLAY_LOST_PLAYERS = False
+DP10_INTERPOLATION_STYLE = 'linear'
 DP10_CLOSEST_JOINTS = [ #Body 25
 [17,18,15,16,1,2,5,3,6,8,4,7,9,12,10,13,11,14,24,21,23,19,22,20],#0
 [2,5,0,17,18,15,16,3,6,8,4,7,9,12,10,13,11,14,24,21,23,19,22,20],#1
@@ -56,46 +60,46 @@ colorList = [(255,0,0),(0,255,0),(0,0,255)]
 #=================
     
 def getThreshold(height,width):
-    return DP10_THRESHOLD* height/1280 * width/720 
+    return DP10_THRESHOLD* (height/1280 ) * width / 760
  
 def weightGenerator(n,firstPnt, secondPnt):
-    if(DP10_INTERPOLATION is 'linear' or DP10_INTERPOLATION is 'polynomial'):
+    if(DP10_INTERPOLATION_STYLE is 'linear' or DP10_INTERPOLATION_STYLE is 'polynomial'):
         s = n+1
         for i in range(1,s):
             yield (1 - i/s,i/s)
             
-    elif(DP10_INTERPOLATION is 'piecewise'):
+    elif(DP10_INTERPOLATION_STYLE is 'piecewise'):
         for _ in range(n//2):
             yield(1,0)
         for _ in range(n - n//2):
             yield(0,1)
             
-    elif (DP10_INTERPOLATION is 'square'):
+    elif (DP10_INTERPOLATION_STYLE is 'square'):
         s = n+1
         for i in range(1,s):
             val = (i/s)**2
             yield (1 - (val),val)
-    elif(DP10_INTERPOLATION is 'exp'):
+    elif(DP10_INTERPOLATION_STYLE is 'exp'):
         s = n+1
         for i in range(1,s):
             val = np.exp(-i)
             yield(val,1-val)
-    elif(DP10_INTERPOLATION is 'sinusodial'):
+    elif(DP10_INTERPOLATION_STYLE is 'sinusodial'):
         s = n+1
         for i in range(1,s):
             val = np.cos(0.5*np.pi*i/s)
             yield(val,1-val)
-    elif(DP10_INTERPOLATION is 'pascal2'):
+    elif(DP10_INTERPOLATION_STYLE is 'pascal2'):
         s = n+1
         for i in range(1,s):
             val = 1 - 2*i/s + (i/s)**2
             yield(val,1-val)
-    elif(DP10_INTERPOLATION is 'specialSpice'):
+    elif(DP10_INTERPOLATION_STYLE is 'specialSpice'):
         s = n+1
         for i in range(1,s):
             val = 1 - 4*i/s + 6*(i/s)**2 - 4*(i/s)**3 + (i/s)**4
             yield(val,1-val)
-    elif(DP10_INTERPOLATION is 'splice'):
+    elif(DP10_INTERPOLATION_STYLE is 'splice'):
         #Need three data points to fit splice
         pass
     else:
@@ -214,7 +218,7 @@ def getDistanceMatrixPoseandPoint(poses, point):
         for (x,y,c) in chunker(pose,3):
             if(c != 0 ):
                 hasAValidJoint = True
-                dist = (x-point[0])**2 + (y-point[1])**2
+                dist = np.linalg.norm([x-point[0],y-point[1]])
                 tempDist.append(dist)
         if(hasAValidJoint):
             distanceList.append(min(tempDist))
@@ -283,10 +287,49 @@ def hasAtLeastKJoints(pose, k):
             count+=1
     return True if count>=k else False
     
+def save(clipName,frameList):
+    """
+        Save filtered poses to File
+    """
+    #Get the Last Frame with Valid Data
+    lastFrameNum = -1
+    for frame in frameList:
+        for pIdx in frame.pi:
+            for x,y,c in chunker(frame.openpose[pIdx],3):
+                if(c != 0 ):
+                    lastFrameNum = frame.frameNum
+    
+    #Create/Clear folders
+    rootPath = DP10_OUTPUT_FOLDER+clipName+'/'
+    jsnPath = rootPath + 'filtered_jsn/'
+    vidPath = rootPath + 'filtered_vid/'
+    if(os.path.exists(rootPath)):   #Remove what already exists
+        shutil.rmtree(rootPath)
+    os.makedirs(os.path.dirname(rootPath))
+    os.makedirs(os.path.dirname(jsnPath))
+    os.makedirs(os.path.dirname(vidPath))
+    
+    #Create Video and output JSON
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(vidPath + '%s.mp4'%clipName.split('/')[1],fourcc,frameList[0].fps,frameList[0].res)
+    outJson = []
+    for i in range(lastFrameNum + 1):
+        frame = frameList[i]
+        tempDict = {}
+        tempDict['frameNum'] = frame.frameNum
+        for pIdx, playerName in zip(frame.pi,['perp','victim']):
+            tempDict[playerName] = frame.openpose[pIdx]
+        out.write(frame.frame)
+        outJson.append(tempDict)
+    
+    #Save to File
+    out.release()
+    with open(jsnPath + '%s.json'%clipName.split('/')[1], 'w', encoding='utf-8') as f:
+        json.dump(outJson, f, ensure_ascii=False, indent=4)
     
     
 class frameSave():
-    def __init__(self,frameNum,frame,openpose,points):
+    def __init__(self,frameNum,frame,openpose,points,fps,height,width):
         self.frameNum = frameNum
         self.frame = frame
         self.openpose = openpose
@@ -294,6 +337,8 @@ class frameSave():
         self.lostPlayersPoses = []
         self.lastPIPose = []
         self.points = points
+        self.fps = int(np.round(fps))
+        self.res = (int(np.round(width)),int(np.round(height)))
     
 if __name__ == '__main__':
     #1. Fetch all clippaths
@@ -307,7 +352,7 @@ if __name__ == '__main__':
         playersInvolved = json.load(f)
     
     #3. Read in video and filter poses
-    clipIdx = 39
+    clipIdx = 0
     while clipIdx < len(filePaths):
         clipName = filePaths[clipIdx]
         clipPath = DP10_TRIMMED_FOLDER + clipName + '.mp4'
@@ -317,6 +362,7 @@ if __name__ == '__main__':
         frameList = []
         frameNum = 0
         cap = cv2.VideoCapture(clipPath)
+        fps = cap.get(cv2.CAP_PROP_FPS)
         clipWidth = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         clipHeight = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
         while(cap.isOpened()):
@@ -339,7 +385,7 @@ if __name__ == '__main__':
             points = playersInvolved[clipName + '.mp4']
             
             #Save member
-            frameList.append(frameSave(frameNum,frame,poses,points))
+            frameList.append(frameSave(frameNum,frame,poses,points,fps,clipHeight,clipWidth))
             
             
             #Update Clip Members
@@ -351,23 +397,36 @@ if __name__ == '__main__':
         #Entry point, identify labeled players 
         for frameObj in frameList:
             frameIdx = frameObj.frameNum
+            points = frameObj.points
+            frameObj.points = copy.deepcopy(points)
+            
             #Build dataframe with columns as pose idx and index as labelled player
             dist_df = pd.DataFrame(columns = range(len(frameObj.openpose)))
             for p in ['p1','p2']:
-                if(frameObj.points[p]['frameNum'] == frameIdx):
+                if(points[p]['frameNum'] == frameIdx):
                     tempSer = getDistanceMatrixPoseandPoint(frameObj.openpose,frameObj.points[p]['pos'])
                     tempSer.name = p
                     dist_df = dist_df.append(tempSer)
             
-            while(not dist_df.empty):
+            toLabel = list(dist_df.index)
+            for _ in range(len(dist_df)):
+                if(dist_df.empty):
+                    for p in toLabel:
+                        points[p]['frameNum'] += 1
+                    break
                 #Fetch which player is closer to which label
-                minIdx, _ = findIdxesOfMinInDataFrame(dist_df)
+                minIdx, minDist = findIdxesOfMinInDataFrame(dist_df)
                 dist_df.drop(minIdx[0],axis=0,inplace=True)
                 dist_df.drop(minIdx[1],axis=1,inplace=True)
-                frameObj.pi[['p1','p2'].index(minIdx[0])] = minIdx[1]
                 
+                if( not (minDist < 0.5*getThreshold(clipHeight,clipWidth))):
+                    points[minIdx[0]]['frameNum'] += 1
+                else:
+                    frameObj.pi[['p1','p2'].index(minIdx[0])] = minIdx[1]
+                del toLabel[toLabel.index(minIdx[0])]
             
         #First Pass Through
+        hasAPoint = False
         prevFrameObj = frameList[0]
         for frameObj in frameList[1:]:
             #0.5 Update Lost poses index
@@ -375,6 +434,8 @@ if __name__ == '__main__':
         
             #Check if you have players involved in previous frames
             if(len([temp for temp in prevFrameObj.pi if temp is not None]) > 0):
+                hasAPoint = True
+            if(hasAPoint):
                 #Need To Interpolate players.
                 #To do so, will use a variant of Dancing Links algorithm by Prof. Donald Knuth
                 
@@ -443,8 +504,6 @@ if __name__ == '__main__':
                         piIdx = prevFrameObj.pi.index(idx)
                     frameObj.lostPlayersPoses.append((prevFrameObj.openpose[idx],DP10_TTL_POSES,piIdx))
                         
-                
-            
             prevFrameObj = frameObj
             
         #=============
@@ -498,12 +557,14 @@ if __name__ == '__main__':
                             toInterpolate = []
                         else:
                             p1 = (x,y)
-                        
                     
-                
-            
-        
-        
+                    #We are at the end of the clip, but there are still some joints to 
+                    # interpolate
+                    if(len(toInterpolate) > 0):
+                        for frameToInterpolate in toInterpolate:
+                            tempPoseIdx = frameToInterpolate.pi[piIdx]
+                            frameToInterpolate.openpose[tempPoseIdx][3*jointIdx + 0] = p1[0]
+                            frameToInterpolate.openpose[tempPoseIdx][3*jointIdx + 1] = p1[1]                       
         #============
         #VIEW RESULTS
         #============
@@ -514,7 +575,7 @@ if __name__ == '__main__':
             frameObj = frameList[frameIdx]
         
             frameNum = frameObj.frameNum
-            frame = frameObj.frame
+            frame = frameObj.frame.copy()
             openpose = frameObj.openpose
             points = frameObj.points
             posesInvolved = frameObj.pi
@@ -525,35 +586,58 @@ if __name__ == '__main__':
             #===============
             #Draw joints of players
             for i,pose in enumerate(openpose):
-                if(i not in posesInvolved):
+                if(i == posesInvolved[0]):
                     color = (0,0,255)
-                elif(i == posesInvolved[0]):
-                    color = (255,0,0)
                 elif(i == posesInvolved[1]):
                     color = (0,255,0)
+                elif(i not in posesInvolved):
+                    if(DP10_DISPLAY_NON_INVOLVED):
+                        color = (255,0,0)
+                    else:
+                        continue
+                else:
+                    continue
+                #Display bounding box
+                if(i in posesInvolved and DP10_DISPLAY_BOUNDING_BOX):
+                    xVals = [int(x) for x,_,c in chunker(pose,3) if x is not 0]
+                    yVals = [int(y) for _,y,c in chunker(pose,3) if y is not 0]
+                    if(len(xVals) == 0 ):
+                        continue
+                    frame = cv2.rectangle(frame, (min(xVals) - 1 ,min(yVals) - 1 ), (max(xVals) + 1,max(yVals) + 1), color=color, thickness = 2 )
+                
                 for (x,y,c) in chunker(pose,3):
                     if(c == 0):
+                        if(not DP10_DO_INTERPOLATION):
+                            continue
                         tempColor = (color[0]//2,color[1]//2,color[2]//2)
                     else:
                         tempColor = color
                     frame = cv2.circle(frame, (int(x),int(y)), 1, color = tempColor, thickness = 10)
-            for pose,_,_ in lp:
-                for (x,y,c) in chunker(pose,3):
-                    frame = cv2.circle(frame, (int(x),int(y)), 1, color = (255,255,0), thickness = 10)
+            
+            #LOST PLAYERS
+            if(DP10_DISPLAY_LOST_PLAYERS):
+                for pose,_,_ in lp:
+                    for (x,y,c) in chunker(pose,3):
+                        frame = cv2.circle(frame, (int(x),int(y)), 1, color = (255,255,0), thickness = 10)
             
             #Draw points
-            for p,color in zip(['p1','p2'],[(255,255,0),(0,255,255)]):
+            for p,color in zip(['p1','p2'],[(255,0,255),(0,255,255)]):
                 if(frameNum == points[p]['frameNum']):
                     x = points[p]['pos'][0]
                     y = points[p]['pos'][1]
                     frame = cv2.circle(frame, (int(x),int(y)), 1, color = color, thickness = 10)
+            
             #Draw Frame Number
-            frame = cv2.putText(frame,"Frame#: %d"%frameNum, (30,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,0))
+            frame = cv2.putText(frame,"Frame#: %d"%frameNum, (30,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (127,127,127))
+            #Draw Legend
+            frame = cv2.putText(frame,"Perp", (230,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255))
+            frame = cv2.putText(frame,"Victim", (320,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0))
             
             #=============
             #Display Frame
             #=============
-            cv2.imshow('frame',frame)
+            windowName = '%s'%clipName
+            cv2.imshow(windowName,frame)
             
             #================
             #Await User Input
@@ -573,6 +657,10 @@ if __name__ == '__main__':
                 elif(k == ord('n')):
                     nextVid = True
                     break
+                elif(k == ord('s')):
+                    save(clipName,frameList)
+                    nextVid = True
+                    break
                 elif(k == ord('q')):
                     terminate = True
                     break
@@ -582,10 +670,12 @@ if __name__ == '__main__':
             
             #Update members
             frameIdx += 1
-            
         
         if(terminate):
             break
+        
+        #Close current window
+        cv2.destroyWindow(windowName)
         
         #Update Members
         clipIdx += 1

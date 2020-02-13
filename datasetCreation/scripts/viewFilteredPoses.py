@@ -55,6 +55,20 @@ if __name__ == '__main__':
         with open(jsnPath,'r') as f:
             JSNFilt = json.load(f)
         
+        #Fetch JSON about penalty
+        with open('../json/%s.json'%phytType,'r') as f:
+            phytData = json.load(f)
+        penaltyFound = False
+        for video in phytData['video_description']:
+            for penalty in phytData['video_description'][video]['penalties']:
+                if penalty['clip_ID'] == int(clipID.split('_')[1]):
+                    PEN = penalty['label']
+                    penaltyFound = True
+                    break
+            if(penaltyFound):
+                break
+        penalty = phytData['labels'][str(PEN)]
+        
         nextVid = False
         frameIdx = 0
         while(1):
@@ -93,14 +107,15 @@ if __name__ == '__main__':
             frameF = cv2.putText(frameF,"Perp", (240,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255))
             frameF = cv2.putText(frameF,"Victim", (320,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0))
             
+            
             if(shape[1] > 1000):
                 resizedOP = cv2.resize(frameOP, (int(shape[1]/2),int(shape[0]/2)))
                 resizedF = cv2.resize(frameF, (int(shape[1]/2),int(shape[0]/2)))
             else:
                 resizedOP = frameOP
                 resizedF = frameF
-            cv2.imshow('openpose',resizedOP)
-            cv2.imshow('filtered',resizedF)
+            cv2.imshow('openpose %s, %s'%(clipName,penalty),resizedOP)
+            cv2.imshow('filtered %s, %s'%(clipName,penalty),resizedF)
             
             
             while(True):
@@ -124,10 +139,15 @@ if __name__ == '__main__':
             
             if(terminate or nextVid):
                 nextVid = False
+                cv2.destroyAllWindows()
                 break
+            
             frameIdx += 1
             frameIdx = frameIdx % len(frameListFiltered)
+            
+            
             
         if(terminate):
             break
         clipIdx += 1
+    cv2.destroyAllWindows()

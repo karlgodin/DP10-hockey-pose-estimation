@@ -3,8 +3,8 @@ from argparse import ArgumentParser
 from classifier.joints import parse_clip
 from classifier.GTheta import get_combinations
 from classifier.GTheta import GTheta
+from classifier.FPhi import FPhi
 import torch.tensor
-from torch import from_numpy
 
 # Pytorch Lightning
 import pytorch_lightning as pl
@@ -15,20 +15,18 @@ class SuperRNModel(pl.LightningModule):
     def __init__(self, hparams):
         super(SuperRNModel, self).__init__()
         self.g_model = GTheta(hparams)
-        # add self.f_model as well here
+        self.f_model = FPhi(hparams)
 
 
     def forward(self, perp: np.ndarray, victim: np.ndarray):
-        print("the forward function has been called")
+        print("Begin: forwarding of the SuperRNModel")
 
+        print("starting calculations for G function")
         # numpy matrix of all combination of inter joints
         inter_combinations_joints = get_combinations(perp, victim)
 
-        inter_combinations_joints_tensor = torch.tensor(inter_combinations_joints)
-
         # change those values depending on the number of combination and the number of outputs from layer of G
-        accumulation = torch.zeros(1, 250, dtype=torch.float)
-        number = len(inter_combinations_joints)
+        accumulation = torch.zeros(250, dtype=torch.float)
         for x in range(len(inter_combinations_joints)):
 
             input_tensor = torch.FloatTensor(inter_combinations_joints[x])
@@ -37,8 +35,11 @@ class SuperRNModel(pl.LightningModule):
 
         # do average
         average = torch.div(accumulation, len(inter_combinations_joints))
-        print(average)
-        print("call f_theta in relationship to the accumulation")
+
+        print("starting forward for F function")
+        tensor_classification = self.f_model(average)
+        return tensor_classification
+
 
     # pseudo code for our implementation of the rn model
     # master network:
@@ -67,8 +68,8 @@ if __name__ == '__main__':
 
     rnModel = SuperRNModel(hyperparams)
     rnModel.train()
-    rnModel(perp, victim)
-
+    results = rnModel(perp, victim)
+    print(results)
     # train model
     #main(hyperparams, None)
 

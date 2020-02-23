@@ -1,5 +1,4 @@
-import numpy as np
-
+from numpy import sqrt
 
 def DP10_getDistanceVector2Poses(data,p1,j1,p2,j2):
     """
@@ -34,7 +33,7 @@ def DP10_getDistanceVector2Poses(data,p1,j1,p2,j2):
         (x2,y2) = frame[p2][3*j2:3*j2+2]
         
         #Calculate euclidean distance
-        dist = np.sqrt( (x1-x2)**2 + (y1-y2)**2 )
+        dist = sqrt( (x1-x2)**2 + (y1-y2)**2 )
         out.append(dist)
         
     return out
@@ -72,7 +71,7 @@ def DP10_getMotionVector2Poses(data,p1,j1,p2,j2):
         (x2,y2) = frame2[p2][3*j2:3*j2+2]
         
         #Calculate euclidean distance
-        motion = np.sqrt( (x1-x2)**2 + (y1-y2)**2 )
+        motion = sqrt( (x1-x2)**2 + (y1-y2)**2 )
         out.append(motion)
         
     return out

@@ -1,78 +1,68 @@
 from numpy import sqrt
 
-def DP10_getDistanceVector2Poses(data,p1,j1,p2,j2):
+def chunker(seq, size):
+    if(seq is not None):
+        return [seq[pos:pos + size] for pos in range(0, len(seq), size)]
+    else:
+        return []
+
+def DP10_getDistanceVector2Poses(p1,p2):
     """
         Calculates the Distance Vector between the joint of p1 and the joint of p2.
         Returns a list of euclidean distances
         
         Parameters
         ----------
-        data: Dict of filtered poses for each frame
-        p1: str. 'perp' or 'victim'
-        j1: number between 0-24. Follows OpenPose output convention for BODY25
-        p2: str. 'perp' or 'victim'
-        j2: number between 0-24. Follows OpenPose output convention for BODY25
+        p1: List of x,y,x for a joint
+        p2: List of x,y,c for a joint
         
         Returns
         -------
         List of euclidean distances
-    """
+    """    
     #Argument Check
-    for p in [p1,p2]:
-        if(p is not 'perp' and p is not 'victim'):
-            raise Exception()
-    for j in [j1,j2]:
-        if(j<0 or j > 24):
+    for j in [len(p1),len(p2)]:
+        if((j-1)%3 != 0):
             raise Exception()
     
     #Iterate through all sorted frames
-    data_sorted = sorted(data,key = lambda x: x['frameNum'])
     out = []
-    for frame in data_sorted:
-        (x1,y1) = frame[p1][3*j1:3*j1+2]
-        (x2,y2) = frame[p2][3*j2:3*j2+2]
-        
+    chunkedP1 = chunker(p1[:-1],3)
+    chunkedP2 = chunker(p2[:-1],3)
+    for (x1,y1,c1),(x2,y2,c2) in zip(chunkedP1,chunkedP2):
         #Calculate euclidean distance
         dist = sqrt( (x1-x2)**2 + (y1-y2)**2 )
         out.append(dist)
         
     return out
    
-def DP10_getMotionVector2Poses(data,p1,j1,p2,j2):
+def DP10_getMotionVector2Poses(p1,p2):
     """
-        Calculates the Motion Vector between the joint of p1 and the joint of p2.
+        Calculates the Distance Vector between the joint of p1 and the joint of p2.
         Returns a list of euclidean distances
         
         Parameters
         ----------
-        data: Dict of filtered poses for each frame
-        p1: str. 'perp' or 'victim'
-        j1: number between 0-24. Follows OpenPose output convention for BODY25
-        p2: str. 'perp' or 'victim'
-        j2: number between 0-24. Follows OpenPose output convention for BODY25
+        p1: List of x,y,x for a joint
+        p2: List of x,y,c for a joint
         
         Returns
         -------
         List of euclidean distances
-    """
+    """    
     #Argument Check
-    for p in [p1,p2]:
-        if(p is not 'perp' and p is not 'victim'):
-            raise Exception()
-    for j in [j1,j2]:
-        if(j<0 or j > 24):
+    for j in [len(p1),len(p2)]:
+        if((j-1)%3 != 0):
             raise Exception()
     
     #Iterate through all sorted frames
-    data_sorted = sorted(data,key = lambda x: x['frameNum'])
     out = []
-    for frame1,frame2 in zip(data_sorted[:-1],data_sorted[1:]):
-        (x1,y1) = frame1[p1][3*j1:3*j1+2]
-        (x2,y2) = frame2[p2][3*j2:3*j2+2]
-        
+    chunkedP1 = chunker(p1[:-1],3)[:-1]
+    chunkedP2 = chunker(p2[:-1],3)[1:]
+    for (x1,y1,c1),(x2,y2,c2) in zip(chunkedP1,chunkedP2):
         #Calculate euclidean distance
-        motion = sqrt( (x1-x2)**2 + (y1-y2)**2 )
-        out.append(motion)
+        dist = sqrt( (x1-x2)**2 + (y1-y2)**2 )
+        out.append(dist)
         
     return out
 
@@ -93,12 +83,24 @@ if __name__ == '__main__':
     clipID = clipPath.split('/')[1]
     print('Testing with: %s'%clipPath)
     
-    #3. Open JSON file
-    with open(DP10_FILTERED_POSES+clipPath+'/filtered_jsn/%s.json'%clipID) as f:
-        posesList = json.load(f)
+    #3. Create Test Data
+    numOfFrames = 93
+    p1,p2 = [], []
+    for i in range(numOfFrames):
+        p1.append((5+i*10))
+        p1.append((10+i*20))
+        p1.append((0.1*i)%1)
+        
+        p2.append((2+i))
+        p2.append((4+i))
+        p2.append((0.2*i)%1)
+    p1.append(2.0)
+    p2.append(3.0)
     
-    distVector = DP10_getDistanceVector2Poses(posesList,'perp',2,'victim',3)
+    distVector = DP10_getDistanceVector2Poses(p1,p2)
     print('Distance Vector:\n', distVector)
+    print('Length: ',len(distVector))
     
-    motionVector = DP10_getMotionVector2Poses(posesList,'perp',2,'victim',3)
+    motionVector = DP10_getMotionVector2Poses(p1,p2)
     print('Motion Vector:\n',motionVector)
+    print('Length: ',len(motionVector))

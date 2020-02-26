@@ -4,25 +4,40 @@ from classifier.joints import parse_clip
 from classifier.GTheta import get_combinations
 from classifier.GTheta import GTheta
 from classifier.FPhi import FPhi
+from classifier.dataset import ClipsDataset
 import torch.tensor
 
 # Pytorch Lightning
 import pytorch_lightning as pl
+from pytorch_lightning import Trainer
+from torch.utils.data import DataLoader
+
 
 import numpy as np
+
+from pytorch_lightning.callbacks import EarlyStopping
+
 
 class SuperRNModel(pl.LightningModule):
     def __init__(self, hparams):
         super(SuperRNModel, self).__init__()
+        self.hparams = hparams
+
         self.g_model = GTheta(hparams)
         self.f_model = FPhi(hparams)
 
+        self.dataset = ClipsDataset('clips/')
 
-    def forward(self, perp: np.ndarray, victim: np.ndarray):
+
+    def forward(self, x):
         print("Begin: forwarding of the SuperRNModel")
 
         print("starting calculations for G function")
         # numpy matrix of all combination of inter joints
+
+        perp = x['perp']
+        victim = x['victim']
+
         inter_combinations_joints = get_combinations(perp, victim)
 
         # change those values depending on the number of combination and the number of outputs from layer of G
@@ -40,6 +55,29 @@ class SuperRNModel(pl.LightningModule):
         tensor_classification = self.f_model(average)
         return tensor_classification
 
+    def configure_optimizers(self):
+        if self.hparams.optim == 'Adam':
+            return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
+        elif self.hparams.optim == 'SGD':
+            return torch.optim.SGD(self.parameters(), lr=self.hparams.lr, momentum=self.hparams.momentum)
+        else:
+            return None
+
+    def training_step(self, batch, batch_nb):
+        # REQUIRED
+        x = batch
+        if not self.hparams.full_gpu:
+            x = x.cuda()
+            y = y.cuda()
+        y_hat = self.forward(x)
+        loss = self.criterion(y_hat, y.squeeze())
+        tensorboard_logs = {'train_loss': loss}
+        return {'loss': loss, 'log': tensorboard_logs}
+
+    @pl.data_loader
+    def train_dataloader(self):
+        # REQUIRED
+        return DataLoader(self.dataset, batch_size=self.hparams.batch_size, shuffle=True)
 
     # pseudo code for our implementation of the rn model
     # master network:
@@ -59,18 +97,26 @@ if __name__ == '__main__':
 
     # get the inputs for the black box(all the clips)
     # parse each clip to its joints
-    perp, victim = parse_clip()
+    #perp, victim = parse_clip()
 
     # allow model to overwrite or extend args
     parser = GTheta.add_model_specific_args(parent_parser, root_dir)
     hyperparams = parser.parse_args()
 
-
     rnModel = SuperRNModel(hyperparams)
-    rnModel.train()
-    results = rnModel(perp, victim)
-    print(results)
-    # train model
-    #main(hyperparams, None)
+
+    early_stop_callback = EarlyStopping(
+        monitor='val_acc',
+        min_delta=0.00,
+        patience=hyperparams.patience,
+        verbose=False,
+        mode='max'
+    )
+
+    trainer = Trainer(max_nb_epochs=1, early_stop_callback=early_stop_callback, checkpoint_callback=None)
+
+    trainer.fit(rnModel)
+
+
 
 

@@ -126,23 +126,51 @@ def main(hparams, version=None):
     # trainer.test(model)
 
 # have the pairs of joints together to feed in the network
-def get_combinations(perp: np.ndarray, victim: np.ndarray):
-    array_body_index = np.arange(len(perp))
-    # pLength is the length of number of frames * 3 (x, y, c)
-    nb_frames = int(len(perp[0]) / 3)
+def get_combinations(perp: torch.FloatTensor, victim: torch.FloatTensor):
 
+    perp = perp.numpy()
+    victim = victim.numpy()
+
+    # TODO: change this to tensor. rn using numpy arrays
+    nb_position_input = perp.shape[2]
+    array_body_index = np.arange(perp.shape[1])
+    nb_frames = int(nb_position_input / 3)
     # improve logic for optimization
     values = itertools.product(array_body_index, repeat=2)
     nb_players = 2
-    sizeOfData = nb_frames*3*nb_players + nb_frames + (nb_frames - 1) + nb_players
+    sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
     g_inputs = np.zeros(shape=(0, sizeOfData))
+
+    # TODO for when the input of perp and victim are of type torch.FloatTensor
+    # sizeOfPerp = perp.size()
+    # numberOfPoints = sizeOfPerp[2]
+    # array_body_index = np.arange(numberOfPoints)
+    # nb_frames = int(numberOfPoints / 3)
+
+    # improve logic for optimization
+    # values = itertools.product(nb_position_input, repeat=2)
+    # nb_players = 2
+    # sizeOfData = nb_frames*3*nb_players + nb_frames + (nb_frames - 1) + nb_players
+    # g_inputs = np.zeros(shape=(0, sizeOfData))
+
     for x in values:
+
+        aaa = perp[0]
+        bbb = victim[0]
+        joint1 = aaa[x[0]]
+        joint2 = bbb[x[1]]
+
+
         # get features for distance and motion
-        distances = DP10_getDistanceVector2Poses(perp[x[0]], victim[x[1]])
-        motions = DP10_getMotionVector2Poses(perp[x[0]], victim[x[1]])
+        distances = DP10_getDistanceVector2Poses(joint1, joint2)
+        torch.tensor(distances)
+        motions = DP10_getMotionVector2Poses(joint1, joint2)
+        torch.tensor(motions)
         # put on the same row for the matrix: joint1, joint2, distances, motions
-        iteration1 = np.concatenate([perp[x[0]], victim[x[1]], distances, motions])
+        iteration1 = np.concatenate([joint1, joint2, distances, motions])
         g_inputs = np.vstack((g_inputs, iteration1))
+
+    g_inputs = torch.from_numpy(g_inputs)
     return g_inputs
 
 if __name__ == '__main__':

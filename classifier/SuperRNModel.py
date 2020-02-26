@@ -39,13 +39,15 @@ class SuperRNModel(pl.LightningModule):
         victim = x['victim']
 
         inter_combinations_joints = get_combinations(perp, victim)
+        #TODO: make sure that is it looping of the diff combinations and not all the inputs data for the nodes of the model
+        lengthOfInterCombinations = inter_combinations_joints.shape[0]
 
         # change those values depending on the number of combination and the number of outputs from layer of G
         accumulation = torch.zeros(250, dtype=torch.float)
-        for x in range(len(inter_combinations_joints)):
+        for x in range(lengthOfInterCombinations):
 
-            input_tensor = torch.FloatTensor(inter_combinations_joints[x])
-            tensor_g = self.g_model(input_tensor)
+            #input_tensor = torch.FloatTensor(inter_combinations_joints[x])
+            tensor_g = self.g_model(inter_combinations_joints)
             accumulation = accumulation.add(tensor_g)
 
         # do average

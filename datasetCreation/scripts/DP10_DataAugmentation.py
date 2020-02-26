@@ -1,4 +1,4 @@
-from numpy import sqrt
+from numpy import sqrt, asarray
 
 def chunker(seq, size):
     if(seq is not None):
@@ -19,7 +19,7 @@ def DP10_getDistanceVector2Poses(p1,p2):
         Returns
         -------
         List of euclidean distances
-    """    
+    """
     #Argument Check
     for j in [len(p1),len(p2)]:
         if((j-1)%3 != 0):
@@ -33,7 +33,8 @@ def DP10_getDistanceVector2Poses(p1,p2):
         #Calculate euclidean distance
         dist = sqrt( (x1-x2)**2 + (y1-y2)**2 )
         out.append(dist)
-        
+
+    out = asarray(out, dtype=float, order=None)
     return out
    
 def DP10_getMotionVector2Poses(p1,p2):
@@ -63,7 +64,8 @@ def DP10_getMotionVector2Poses(p1,p2):
         #Calculate euclidean distance
         dist = sqrt( (x1-x2)**2 + (y1-y2)**2 )
         out.append(dist)
-        
+
+    out = asarray(out, dtype=float, order=None)
     return out
 
 if __name__ == '__main__':

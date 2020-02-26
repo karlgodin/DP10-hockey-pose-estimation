@@ -12,6 +12,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.logging import TestTubeLogger
 
 from classifier.joints import parse_clip
+from datasetCreation.scripts.DP10_DataAugmentation import DP10_getDistanceVector2Poses, DP10_getMotionVector2Poses
 import numpy as np
 
 import os, sys
@@ -26,7 +27,7 @@ class GTheta(pl.LightningModule):
 
         # define model architecture
         # where 1000 is the number of frames * 3(x, y, c) * 2 (2 joints)
-        nb_nodes = 560
+        nb_nodes = 745 #560
         self.model = nn.Sequential(
             nn.Linear(nb_nodes, nb_nodes),
             nn.ReLU(),
@@ -127,18 +128,21 @@ def main(hparams, version=None):
 # have the pairs of joints together to feed in the network
 def get_combinations(perp: np.ndarray, victim: np.ndarray):
     array_body_index = np.arange(len(perp))
-    frame_length = len(perp[0])
+    # pLength is the length of number of frames * 3 (x, y, c)
+    nb_frames = int(len(perp[0]) / 3)
 
     # improve logic for optimization
     values = itertools.product(array_body_index, repeat=2)
-    combinations = []
-    g_inputs = np.zeros(shape=(0, frame_length*2))
+    nb_players = 2
+    sizeOfData = nb_frames*3*nb_players + nb_frames + (nb_frames - 1) + nb_players
+    g_inputs = np.zeros(shape=(0, sizeOfData))
     for x in values:
-        # put joint1 and joint2 on the same row on
-        iteration1 = np.concatenate([perp[x[0]], victim[x[1]]])
+        # get features for distance and motion
+        distances = DP10_getDistanceVector2Poses(perp[x[0]], victim[x[1]])
+        motions = DP10_getMotionVector2Poses(perp[x[0]], victim[x[1]])
+        # put on the same row for the matrix: joint1, joint2, distances, motions
+        iteration1 = np.concatenate([perp[x[0]], victim[x[1]], distances, motions])
         g_inputs = np.vstack((g_inputs, iteration1))
-        combinations.append(x)
-    print(g_inputs)
     return g_inputs
 
 if __name__ == '__main__':

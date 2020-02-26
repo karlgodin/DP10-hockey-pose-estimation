@@ -4,8 +4,8 @@ import numpy as np
 #TODO add variable frame length compatibility
 n_frames = 15
 
-def parse_clip():
-    with open("example_pose.json") as json_file:
+def parse_clip(file_name: str):
+    with open(file_name) as json_file:
         data = json.load(json_file)
 
         perp_frames = []

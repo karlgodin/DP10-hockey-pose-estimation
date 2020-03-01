@@ -3,5 +3,5 @@ datasetCreation/Videos/*.mp4
 datasetCreation/Videos/*.zip
 datasetCreation/Clips/*.mp4
 datasetCreation/openposeResults/*
-classifier/lightninglogs/
-*/__pycache__/
+classifier/lightning_logs/
+**/__pycache__/*

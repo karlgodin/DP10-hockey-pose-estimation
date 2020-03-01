@@ -93,7 +93,7 @@ class PHYTDataset(torch.utils.data.Dataset):
         self.clips = []
 
         for file_name in files:
-            perp, victim = parse_clip(file_name)
+            perp, victim = parse_PHYT_clip(file_name)
 
             self.clips.append({'perp': perp, 'victim': victim})
 
@@ -125,4 +125,4 @@ class SBUDataset(torch.utils.data.Dataset):
 
 
 if __name__ == "__main__":
-    dataset = SBUDataset('SBUDataset/')
+    dataset = SBUDataset('clips/')

@@ -113,16 +113,20 @@ class SBUDataset(torch.utils.data.Dataset):
             files += [os.path.join(dirpath, file) for file in filenames if file.endswith(".txt")]
 
         self.clips = []
+        self.y = []
 
         for file_name in files:
             self.clips.append(parse_SBU_clip(file_name))
+            arr = [0] * 8
+            arr[int(file_name.split('_')[1]) - 1] = 1
+            self.y.append(file_name)
 
     def __len__(self):
         return len(self.clips)
 
     def __getitem__(self, index):
-        return self.clips[index]
+        return self.clips[index], self.y[index]
 
 
 if __name__ == "__main__":
-    dataset = SBUDataset('clips/')
+    dataset = SBUDataset('SBUDataset/')

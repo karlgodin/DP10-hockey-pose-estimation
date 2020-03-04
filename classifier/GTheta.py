@@ -127,51 +127,32 @@ def main(hparams, version=None):
 
 # have the pairs of joints together to feed in the network
 def get_combinations(perp: torch.FloatTensor, victim: torch.FloatTensor):
-
-    perp = perp.numpy()
-    victim = victim.numpy()
-
-    # TODO: change this to tensor. rn using numpy arrays
-    nb_position_input = perp.shape[2]
-    array_body_index = np.arange(perp.shape[1])
+    sizeOfPerp = perp.size()
+    nb_position_input = sizeOfPerp[2]
+    array_body_index = np.arange(25)
     nb_frames = int(nb_position_input / 3)
-    # improve logic for optimization
+
     values = itertools.product(array_body_index, repeat=2)
     nb_players = 2
     sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
-    g_inputs = np.zeros(shape=(0, sizeOfData))
-
-    # TODO for when the input of perp and victim are of type torch.FloatTensor
-    # sizeOfPerp = perp.size()
-    # numberOfPoints = sizeOfPerp[2]
-    # array_body_index = np.arange(numberOfPoints)
-    # nb_frames = int(numberOfPoints / 3)
-
-    # improve logic for optimization
-    # values = itertools.product(nb_position_input, repeat=2)
-    # nb_players = 2
-    # sizeOfData = nb_frames*3*nb_players + nb_frames + (nb_frames - 1) + nb_players
-    # g_inputs = np.zeros(shape=(0, sizeOfData))
-
+    outputs = []
     for x in values:
-
-        aaa = perp[0]
-        bbb = victim[0]
-        joint1 = aaa[x[0]]
-        joint2 = bbb[x[1]]
-
+        person1 = perp[0]
+        person2 = victim[0]
+        joint1 = person1[x[0]]
+        joint2 = person2[x[1]]
 
         # get features for distance and motion
         distances = DP10_getDistanceVector2Poses(joint1, joint2)
-        torch.tensor(distances)
+        distances = torch.tensor(distances, dtype=torch.float32)
         motions = DP10_getMotionVector2Poses(joint1, joint2)
-        torch.tensor(motions)
+        motions = torch.tensor(motions, dtype=torch.float32)
         # put on the same row for the matrix: joint1, joint2, distances, motions
-        iteration1 = np.concatenate([joint1, joint2, distances, motions])
-        g_inputs = np.vstack((g_inputs, iteration1))
+        iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
+        outputs.append(iteration1)
 
-    g_inputs = torch.from_numpy(g_inputs)
-    return g_inputs
+    outputs = torch.stack(outputs, dim=0)
+    return outputs
 
 if __name__ == '__main__':
     # use default args given by lightning

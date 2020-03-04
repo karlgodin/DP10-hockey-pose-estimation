@@ -4,7 +4,7 @@ from classifier.joints import parse_clip
 from classifier.GTheta import get_combinations
 from classifier.GTheta import GTheta
 from classifier.FPhi import FPhi
-from classifier.dataset import ClipsDataset
+from classifier.dataset import PHYTDataset
 import torch.tensor
 
 # Pytorch Lightning
@@ -26,7 +26,7 @@ class SuperRNModel(pl.LightningModule):
         self.g_model = GTheta(hparams)
         self.f_model = FPhi(hparams)
 
-        self.dataset = ClipsDataset('clips/')
+        self.dataset = PHYTDataset('clips/')
 
 
     def forward(self, x):
@@ -38,23 +38,16 @@ class SuperRNModel(pl.LightningModule):
         perp = x['perp']
         victim = x['victim']
 
-        inter_combinations_joints = get_combinations(perp, victim)
-        #TODO: make sure that is it looping of the diff combinations and not all the inputs data for the nodes of the model
-        lengthOfInterCombinations = inter_combinations_joints.shape[0]
+        input_data_clip_combinations = get_combinations(perp, victim)
+        tensor_g = self.g_model(input_data_clip_combinations)
 
-        # change those values depending on the number of combination and the number of outputs from layer of G
-        accumulation = torch.zeros(250, dtype=torch.float)
-        for x in range(lengthOfInterCombinations):
-
-            #input_tensor = torch.FloatTensor(inter_combinations_joints[x])
-            tensor_g = self.g_model(inter_combinations_joints)
-            accumulation = accumulation.add(tensor_g)
-
-        # do average
-        average = torch.div(accumulation, len(inter_combinations_joints))
+        # calculate sum and div
+        sum = torch.sum(tensor_g, dim=0)
+        size_output_G = tensor_g.shape[1]
+        average_output = sum / size_output_G
 
         print("starting forward for F function")
-        tensor_classification = self.f_model(average)
+        tensor_classification = self.f_model(average_output)
         return tensor_classification
 
     def configure_optimizers(self):

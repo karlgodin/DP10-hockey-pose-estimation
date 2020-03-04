@@ -77,7 +77,7 @@ def get_joints(player_frames : np.ndarray, nb_joints):
 
     # Add body part information to each row and transpose the array such that each row
     # contains x_n0,y_n0,c_n0, ... x_nt, y_nt, c_nt where n is the row number and t is the frame number
-    player_frames = np.append(player_frames, np.reshape(np.arange(nb_joints), (1, nb_joints)), axis=0)
+    player_frames = np.append(player_frames, np.float32(np.reshape(np.arange(nb_joints), (1, nb_joints))), axis=0)
 
     return np.transpose(player_frames)
 

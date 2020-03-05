@@ -5,6 +5,8 @@ import csv
 import numpy as np
 import json
 
+import torch
+
 def parse_PHYT_clip(file_name: str):
     with open(file_name) as json_file:
         data = json.load(json_file)
@@ -91,6 +93,9 @@ class PHYTDataset(torch.utils.data.Dataset):
             files += [os.path.join(dirpath, file) for file in filenames if file.endswith(".json")]
 
         self.clips = []
+        self.y = []
+
+        self.y.append(torch.tensor([0,1], dtype=torch.float32))
 
         for file_name in files:
             perp, victim = parse_PHYT_clip(file_name)
@@ -101,7 +106,7 @@ class PHYTDataset(torch.utils.data.Dataset):
         return len(self.clips)
 
     def __getitem__(self, index):
-        return self.clips[index]
+        return self.clips[index], self.y[index]
 
 
 class SBUDataset(torch.utils.data.Dataset):

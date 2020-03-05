@@ -1,10 +1,10 @@
 import os, sys
 from argparse import ArgumentParser
-from joints import parse_clip
+from classifier.joints import parse_clip
 from classifier.GTheta import get_combinations
-from GTheta import GTheta
-from FPhi import FPhi
-from dataset import PHYTDataset
+from classifier.GTheta import GTheta
+from classifier.FPhi import FPhi
+from classifier.dataset import PHYTDataset
 import torch.tensor
 
 # Pytorch Lightning
@@ -26,7 +26,7 @@ class SuperRNModel(pl.LightningModule):
         self.g_model = GTheta(hparams)
         self.f_model = FPhi(hparams)
 
-        self.dataset = PHYTDataset('clips/')
+        self.dataset = PHYTDataset('classifier/clips/')
 
 
     def forward(self, x):

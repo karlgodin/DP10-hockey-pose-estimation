@@ -6,12 +6,12 @@ from classifier.GTheta import GTheta
 from classifier.FPhi import FPhi
 from classifier.dataset import PHYTDataset
 import torch.tensor
+import torch.nn as nn
 
 # Pytorch Lightning
 import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader
-
 
 import numpy as np
 
@@ -27,6 +27,7 @@ class SuperRNModel(pl.LightningModule):
         self.f_model = FPhi(hparams)
 
         self.dataset = PHYTDataset('classifier/clips/')
+        self.criterion = nn.BCELoss()
 
 
     def forward(self, x):
@@ -60,7 +61,7 @@ class SuperRNModel(pl.LightningModule):
 
     def training_step(self, batch, batch_nb):
         # REQUIRED
-        x = batch
+        x,y = batch
         if not self.hparams.full_gpu:
             x = x.cuda()
             y = y.cuda()

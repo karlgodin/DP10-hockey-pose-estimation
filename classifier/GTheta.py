@@ -22,7 +22,7 @@ import datetime
 class GTheta(pl.LightningModule):
     def __init__(self, hparams):
         super(GTheta, self).__init__()
-        print(f"[{datetime.datetime.now()}] Hyperparameters\n{hparams}")
+        #print(f"[{datetime.datetime.now()}] Hyperparameters\n{hparams}")
         self.hparams = hparams
 
         # define model architecture
@@ -38,7 +38,11 @@ class GTheta(pl.LightningModule):
             nn.Linear(nb_nodes, 250),
             nn.Softmax(dim=0)
         )
-        print(self.model[0], self.model[0].weight)
+
+        if self.hparams.full_gpu:
+            self.model = self.model.cuda()
+
+        #print(self.model[0], self.model[0].weight)
 
     def forward(self, x):
         return self.model(x)

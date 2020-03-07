@@ -146,11 +146,18 @@ def get_combinations(perp: torch.FloatTensor, victim: torch.FloatTensor):
         joint1 = person1[x[0]]
         joint2 = person2[x[1]]
 
-        # get features for distance and motion
-        distances = DP10_getDistanceVector2Poses(joint1, joint2)
-        distances = torch.tensor(distances, dtype=torch.float32)
-        motions = DP10_getMotionVector2Poses(joint1, joint2)
-        motions = torch.tensor(motions, dtype=torch.float32)
+        x_1 = joint1[::3]
+        x_1 = x_1[:-1]
+        x_2 = joint2[::3]
+        x_2 = x_2[:-1]
+
+        y_1 = joint1[1::3]
+        y_2 = joint2[1::3]
+
+        distances = torch.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
+
+        motions = torch.sqrt((x_1[:-1] - x_2[1:])**2 + (y_1[:-1] - y_2[1:])**2 )
+
         # put on the same row for the matrix: joint1, joint2, distances, motions
         iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
         outputs.append(iteration1)

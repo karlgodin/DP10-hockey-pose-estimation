@@ -31,9 +31,6 @@ class SuperRNModel(pl.LightningModule):
 
 
     def forward(self, x):
-        print("Begin: forwarding of the SuperRNModel")
-
-        print("starting calculations for G function")
         # numpy matrix of all combination of inter joints
 
         perp = x['perp']
@@ -47,7 +44,6 @@ class SuperRNModel(pl.LightningModule):
         size_output_G = tensor_g.shape[1]
         average_output = sum / size_output_G
 
-        print("starting forward for F function")
         tensor_classification = self.f_model(average_output)
         return tensor_classification
 
@@ -100,6 +96,11 @@ if __name__ == '__main__':
     hyperparams = parser.parse_args()
 
     rnModel = SuperRNModel(hyperparams)
+
+    for name, params in rnModel.named_parameters():
+        print(name, '\t\t', params.shape)
+
+    print('\n')
 
     early_stop_callback = EarlyStopping(
         monitor='val_acc',

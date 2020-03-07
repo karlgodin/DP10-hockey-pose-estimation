@@ -29,7 +29,10 @@ class FPhi(pl.LightningModule):
             nn.Softmax(0)
         )
 
-        print(self.model[0], self.model[0].weight)
+        if self.hparams.full_gpu:
+            self.model = self.model.cuda()
+
+        #print(self.model[0], self.model[0].weight)
 
     def forward(self, x):
         return self.model(x)

@@ -1,0 +1,20 @@
+{
+    "Definitions": {
+        "penaltyOnly": [
+            "Penalty",
+            "No Penalty"
+        ],
+        "penaltyAndPlayerRole": [
+            "%perp",
+            "%victim"
+        ]
+    },
+    "penaltyOnly": [
+        1,
+        0
+    ],
+    "penaltyAndPlayerRole": [
+        1.0,
+        0.0
+    ]
+}

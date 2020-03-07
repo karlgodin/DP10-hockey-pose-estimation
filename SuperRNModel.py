@@ -33,8 +33,8 @@ class SuperRNModel(pl.LightningModule):
     def forward(self, x):
         # numpy matrix of all combination of inter joints
 
-        perp = x['perp']
-        victim = x['victim']
+        perp = x[:,:25,:]
+        victim = x[:,25:,:]
 
         input_data_clip_combinations = get_combinations(perp, victim)
         tensor_g = self.g_model(input_data_clip_combinations)
@@ -58,7 +58,7 @@ class SuperRNModel(pl.LightningModule):
     def training_step(self, batch, batch_nb):
         # REQUIRED
         x,y = batch
-        if not self.hparams.full_gpu:
+        if self.hparams.full_gpu:
             x = x.cuda()
             y = y.cuda()
         y_hat = self.forward(x)

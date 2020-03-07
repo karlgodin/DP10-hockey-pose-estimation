@@ -100,7 +100,7 @@ class PHYTDataset(torch.utils.data.Dataset):
         for file_name in files:
             perp, victim = parse_PHYT_clip(file_name)
 
-            self.clips.append({'perp': perp, 'victim': victim})
+            self.clips.append(np.concatenate((perp, victim)))
 
     def __len__(self):
         return len(self.clips)

@@ -75,7 +75,7 @@ class GTheta(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser])
 
         # Specify whether or not to put entire dataset on GPU
-        parser.add_argument('--full_gpu', default=True, type=bool)
+        parser.add_argument('--full_gpu', default=False, type=bool)
 
         # training params (opt)
         parser.add_argument('--patience', default=10, type=int)

@@ -21,12 +21,11 @@ class FPhi(pl.LightningModule):
         self.hparams = hparams
 
         self.model = nn.Sequential(
-            nn.Linear(250, 50),
+            nn.Linear(500, 100),
             nn.ReLU(),
-            nn.Linear(50, 50),
+            nn.Linear(100, 100),
             nn.ReLU(),
-            nn.Linear(50, 2),
-            nn.Softmax(0)
+            nn.Linear(100, 8)
         )
 
         if self.hparams.full_gpu:

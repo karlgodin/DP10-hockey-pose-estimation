@@ -7,6 +7,8 @@ import json
 
 import torch
 
+target_frame_amount = 15
+
 def parse_PHYT_clip(file_name: str):
     with open(file_name) as json_file:
         data = json.load(json_file)
@@ -38,8 +40,21 @@ def parse_SBU_clip(file_name):
 
         frame_list = list(csv_reader)
         frame_list = np.array(frame_list, dtype=np.float32)
+        num_frames = frame_list.shape[0]
         perp_frames = frame_list[:,1:46]
         victim_frames = frame_list[:,46:]
+
+        #Take 15 middle frames if at least 15 frames
+        if num_frames >= target_frame_amount:
+            perp_frames = perp_frames[int(num_frames/2)- int(target_frame_amount/2):,:]
+            perp_frames = perp_frames[:target_frame_amount,:]
+
+            victim_frames = victim_frames[int(num_frames / 2) - int(target_frame_amount/2):, :]
+            victim_frames = victim_frames[:target_frame_amount, :]
+        else: # Add zeros for final frames if less than 15 frames
+            perp_frames = np.vstack((perp_frames, np.zeros((target_frame_amount-num_frames, 45), dtype=np.float32)))
+            victim_frames = np.vstack((victim_frames, np.zeros((target_frame_amount-num_frames, 45), dtype=np.float32)))
+
 
         perp_frames = get_joints(perp_frames, 15)
         victim_frames = get_joints(victim_frames, 15)
@@ -121,10 +136,11 @@ class SBUDataset(torch.utils.data.Dataset):
         self.y = []
 
         for file_name in files:
-            self.clips.append(parse_SBU_clip(file_name))
+            temp = np.concatenate(parse_SBU_clip(file_name))
+            self.clips.append(temp)
             arr = [0] * 8
-            arr[int(file_name.split('_')[1]) - 1] = 1
-            self.y.append(file_name)
+            arr[int(file_name.split('\\')[1].split('_')[1]) - 1] = 1
+            self.y.append(torch.tensor(arr, dtype=torch.float32))
 
     def __len__(self):
         return len(self.clips)

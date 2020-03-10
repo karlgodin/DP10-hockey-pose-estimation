@@ -2,7 +2,7 @@ from torch import nn
 import torch.utils.data
 from torch.utils.data import DataLoader
 import torch.optim
-
+from classifier.dataset import target_frame_amount
 import itertools
 
 # Pytorch Lightning
@@ -27,16 +27,16 @@ class GTheta(pl.LightningModule):
 
         # define model architecture
         # where 1000 is the number of frames * 3(x, y, c) * 2 (2 joints)
-        nb_nodes = 745 #560
+        nb_nodes = target_frame_amount * 3 * 2 + 2 + target_frame_amount * 2 - 1
         self.model = nn.Sequential(
-            nn.Linear(nb_nodes, nb_nodes),
+            nn.Linear(nb_nodes, 1000),
             nn.ReLU(),
-            nn.Linear(nb_nodes, nb_nodes),
+            nn.Linear(1000, 1000),
             nn.ReLU(),
-            nn.Linear(nb_nodes, nb_nodes),
+            nn.Linear(1000, 1000),
             nn.ReLU(),
-            nn.Linear(nb_nodes, 250),
-            nn.Softmax(dim=0)
+            nn.Linear(1000, 500),
+            nn.Dropout(0.1)
         )
 
         if self.hparams.full_gpu:
@@ -78,12 +78,12 @@ class GTheta(pl.LightningModule):
         parser.add_argument('--full_gpu', default=False, type=bool)
 
         # training params (opt)
-        parser.add_argument('--patience', default=10, type=int)
+        parser.add_argument('--patience', default=100, type=int)
         parser.add_argument('--optim', default='Adam', type=str)
         parser.add_argument('--lr', default=0.001, type=float)
         parser.add_argument('--momentum', default=0.0, type=float)
         parser.add_argument('--nesterov', default=False, type=bool)
-        parser.add_argument('--batch_size', default=32, type=int)
+        parser.add_argument('--batch_size', default=1, type=int)
         return parser
 
 
@@ -130,39 +130,45 @@ def main(hparams, version=None):
     # trainer.test(model)
 
 # have the pairs of joints together to feed in the network
-def get_combinations(perp: torch.FloatTensor, victim: torch.FloatTensor):
-    sizeOfPerp = perp.size()
-    nb_position_input = sizeOfPerp[2]
-    array_body_index = np.arange(25)
-    nb_frames = int(nb_position_input / 3)
+def get_combinations(perps: torch.FloatTensor, victims: torch.FloatTensor):
+    num_distances = int((perps.size()[2] - 1) / 3)
 
-    values = itertools.product(array_body_index, repeat=2)
-    nb_players = 2
-    sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
-    outputs = []
-    for x in values:
-        person1 = perp[0]
-        person2 = victim[0]
-        joint1 = person1[x[0]]
-        joint2 = person2[x[1]]
+    outputs = torch.empty(perps.size()[0], perps.size()[1] * perps.size()[1], perps.size()[2] * 2 + 2 * num_distances - 1)
 
-        x_1 = joint1[::3]
-        x_1 = x_1[:-1]
-        x_2 = joint2[::3]
-        x_2 = x_2[:-1]
+    for count, perp in enumerate(perps):
+        victim = victims[count]
+        sizeOfPerp = perp.size()
+        nb_position_input = sizeOfPerp[1]
+        array_body_index = np.arange(sizeOfPerp[0])
+        nb_frames = int((nb_position_input - 1) / 3)
 
-        y_1 = joint1[1::3]
-        y_2 = joint2[1::3]
+        values = itertools.product(array_body_index, repeat=2)
+        nb_players = 2
+        # TODO transform this into good comment that describes size of data: sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
+        output = []
+        for x in values:
+            joint1 = perp[x[0]]
+            joint2 = victim[x[1]]
 
-        distances = torch.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
+            x_1 = joint1[::3]
+            x_1 = x_1[:-1]
+            x_2 = joint2[::3]
+            x_2 = x_2[:-1]
 
-        motions = torch.sqrt((x_1[:-1] - x_2[1:])**2 + (y_1[:-1] - y_2[1:])**2 )
+            y_1 = joint1[1::3]
+            y_2 = joint2[1::3]
 
-        # put on the same row for the matrix: joint1, joint2, distances, motions
-        iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
-        outputs.append(iteration1)
+            distances = torch.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
 
-    outputs = torch.stack(outputs, dim=0)
+            motions = torch.sqrt((x_1[:-1] - x_2[1:])**2 + (y_1[:-1] - y_2[1:])**2 )
+
+            # put on the same row for the matrix: joint1, joint2, distances, motions
+            iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
+            output.append(iteration1)
+
+        output = torch.stack(output, dim=0)
+        outputs[count] = output
+
     return outputs
 
 if __name__ == '__main__':

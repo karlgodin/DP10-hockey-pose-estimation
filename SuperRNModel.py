@@ -4,7 +4,7 @@ from classifier.joints import parse_clip
 from classifier.GTheta import get_combinations
 from classifier.GTheta import GTheta
 from classifier.FPhi import FPhi
-from classifier.dataset import PHYTDataset
+from classifier.dataset import PHYTDataset, SBUDataset
 import torch.tensor
 import torch.nn as nn
 
@@ -13,9 +13,15 @@ import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader
 
+import math
 import numpy as np
 
 from pytorch_lightning.callbacks import EarlyStopping
+
+def accuracy(y_pred, y):
+    correct = (y == y_pred).sum().float()
+    acc = correct/len(y)
+    return acc
 
 
 class SuperRNModel(pl.LightningModule):
@@ -26,21 +32,27 @@ class SuperRNModel(pl.LightningModule):
         self.g_model = GTheta(hparams)
         self.f_model = FPhi(hparams)
 
-        self.dataset = PHYTDataset('classifier/clips/')
-        self.criterion = nn.BCELoss()
+        dataset = SBUDataset('classifier/SBUDataset')
+        self.criterion = nn.CrossEntropyLoss()
+
+        [training_dataset, validation_dataset] = torch.utils.data.random_split(dataset, [round(len(dataset) * 0.9), round(len(dataset) * 0.1)])
+        self.train_dataset = training_dataset
+        self.val_dataset = validation_dataset
+
+
 
 
     def forward(self, x):
         # numpy matrix of all combination of inter joints
 
-        perp = x[:,:25,:]
-        victim = x[:,25:,:]
+        perp = x[:,:int(x.shape[1]/2),:]
+        victim = x[:,int(x.shape[1]/2):,:]
 
         input_data_clip_combinations = get_combinations(perp, victim)
         tensor_g = self.g_model(input_data_clip_combinations)
 
         # calculate sum and div
-        sum = torch.sum(tensor_g, dim=0)
+        sum = torch.sum(tensor_g, dim=1)
         size_output_G = tensor_g.shape[1]
         average_output = sum / size_output_G
 
@@ -62,24 +74,35 @@ class SuperRNModel(pl.LightningModule):
             x = x.cuda()
             y = y.cuda()
         y_hat = self.forward(x)
-        loss = self.criterion(y_hat, y.squeeze())
+        loss = self.criterion(y_hat, torch.max(y, 1)[1])
         tensorboard_logs = {'train_loss': loss}
         return {'loss': loss, 'log': tensorboard_logs}
+
+    def validation_step(self, batch, batch_nb):
+        # OPTIONAL
+        x, y = batch
+        if self.hparams.full_gpu:
+            x = x.cuda()
+            y = y.cuda()
+        y_hat = self.forward(x)
+        return {'val_loss': self.criterion(y_hat, torch.max(y, 1)[1]), 'val_acc': accuracy(torch.argmax(y_hat, 1), torch.max(y, 1)[1])}
+
+    def validation_end(self, outputs):
+        # OPTIONAL
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        avg_acc = torch.stack([x['val_acc'] for x in outputs]).mean()
+        tensorboard_logs = {'val_loss': avg_loss, 'val_acc': avg_acc}
+        return {'avg_val_loss': avg_loss, 'avg_val_acc': avg_acc, 'log': tensorboard_logs}
 
     @pl.data_loader
     def train_dataloader(self):
         # REQUIRED
-        return DataLoader(self.dataset, batch_size=self.hparams.batch_size, shuffle=True)
+        return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, shuffle=True)
 
-    # pseudo code for our implementation of the rn model
-    # master network:
-    #     forward():
-    #         for i in 625:
-    #             accu += gtheta.forward(x)
-    #
-    #         x = accu/625
-    #
-    #         return = fphi.forward(x)
+    @pl.data_loader
+    def val_dataloader(self):
+        # OPTIONAL
+        return DataLoader(self.val_dataset, batch_size=self.hparams.batch_size, shuffle=False)
 
 
 if __name__ == '__main__':
@@ -110,7 +133,7 @@ if __name__ == '__main__':
         mode='max'
     )
 
-    trainer = Trainer(max_nb_epochs=1, early_stop_callback=early_stop_callback, checkpoint_callback=None)
+    trainer = Trainer(max_nb_epochs=200, early_stop_callback=early_stop_callback, checkpoint_callback=None)
 
     trainer.fit(rnModel)
 

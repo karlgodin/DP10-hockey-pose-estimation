@@ -20,14 +20,14 @@ from argparse import ArgumentParser
 import datetime
 
 class GTheta(pl.LightningModule):
-    def __init__(self, hparams):
+    def __init__(self, hparams,numOfFrames,numOfJoints):
         super(GTheta, self).__init__()
         #print(f"[{datetime.datetime.now()}] Hyperparameters\n{hparams}")
         self.hparams = hparams
 
         # define model architecture
         # where 1000 is the number of frames * 3(x, y, c) * 2 (2 joints)
-        nb_nodes = 745 #560
+        nb_nodes =  numOfFrames*8 + 1#Input size is #ofFrames*8+1
         self.model = nn.Sequential(
             nn.Linear(nb_nodes, nb_nodes),
             nn.ReLU(),
@@ -35,14 +35,11 @@ class GTheta(pl.LightningModule):
             nn.ReLU(),
             nn.Linear(nb_nodes, nb_nodes),
             nn.ReLU(),
-            nn.Linear(nb_nodes, 250),
-            nn.Softmax(dim=0)
+            nn.Linear(nb_nodes, 250)
         )
 
         if self.hparams.full_gpu:
             self.model = self.model.cuda()
-
-        #print(self.model[0], self.model[0].weight)
 
     def forward(self, x):
         return self.model(x)
@@ -69,23 +66,6 @@ class GTheta(pl.LightningModule):
     @pl.data_loader
     def test_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.hparams.batch_size, shuffle=False)
-
-    @staticmethod
-    def add_model_specific_args(parent_parser, root_dir):
-        parser = ArgumentParser(parents=[parent_parser])
-
-        # Specify whether or not to put entire dataset on GPU
-        parser.add_argument('--full_gpu', default=False, type=bool)
-
-        # training params (opt)
-        parser.add_argument('--patience', default=10, type=int)
-        parser.add_argument('--optim', default='Adam', type=str)
-        parser.add_argument('--lr', default=0.001, type=float)
-        parser.add_argument('--momentum', default=0.0, type=float)
-        parser.add_argument('--nesterov', default=False, type=bool)
-        parser.add_argument('--batch_size', default=32, type=int)
-        return parser
-
 
 def main(hparams, version=None):
     torch.manual_seed(0)
@@ -130,15 +110,13 @@ def main(hparams, version=None):
     # trainer.test(model)
 
 # have the pairs of joints together to feed in the network
-def get_combinations(perp: torch.FloatTensor, victim: torch.FloatTensor):
+def get_combinations_inter(perp: torch.FloatTensor, victim: torch.FloatTensor):
     sizeOfPerp = perp.size()
     nb_position_input = sizeOfPerp[2]
     array_body_index = np.arange(25)
     nb_frames = int(nb_position_input / 3)
 
     values = itertools.product(array_body_index, repeat=2)
-    nb_players = 2
-    sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
     outputs = []
     for x in values:
         person1 = perp[0]
@@ -161,7 +139,43 @@ def get_combinations(perp: torch.FloatTensor, victim: torch.FloatTensor):
         # put on the same row for the matrix: joint1, joint2, distances, motions
         iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
         outputs.append(iteration1)
+    
+    #Shape is [(#ofJoints)**2, #ofFrames*8+1]
+    outputs = torch.stack(outputs, dim=0)
+    return outputs
+    
+# have the pairs of joints together to feed in the network
+def get_combinations_intra(p1: torch.FloatTensor):
+    sizeOfP1 = p1.size()
+    nb_position_input = sizeOfP1[2]
+    array_body_index = np.arange(25)
+    nb_frames = int(nb_position_input / 3)
 
+    values = itertools.combinations(array_body_index, 2)
+    outputs = []
+    for x in values:
+        person1 = p1[0]
+        joint1 = person1[x[0]]
+        joint2 = person1[x[1]]
+
+        x_1 = joint1[::3]
+        x_1 = x_1[:-1]
+        x_2 = joint2[::3]
+        x_2 = x_2[:-1]
+
+        y_1 = joint1[1::3]
+        y_2 = joint2[1::3]
+
+        distances = torch.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
+
+        motions = torch.sqrt((x_1[:-1] - x_2[1:])**2 + (y_1[:-1] - y_2[1:])**2 )
+        
+
+        # put on the same row for the matrix: joint1, joint2, distances, motions
+        iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
+        outputs.append(iteration1)
+    
+    #Shape is [(#ofJoints)!/2!/(#ofJoints - 2)!, #ofFrames*8+1]
     outputs = torch.stack(outputs, dim=0)
     return outputs
 

@@ -4,8 +4,23 @@ from classifier.joints import parse_clip
 import csv
 import numpy as np
 import json
+import itertools
+from sklearn.model_selection import KFold
 
 import torch
+import random
+
+kFoldGenerator = None
+KFoldLength = 1
+def generatorKFold(sizeOfElem,k=KFoldLength):
+    indexes = [i for i in range(sizeOfElem)]
+    random.shuffle(indexes)
+    if(k == 1):
+        yield indexes, []
+    else:
+        kf = KFold(n_splits=KFoldLength)
+        for train_index, test_index in kf.split(indexes):
+            yield train_index, test_index
 
 def parse_PHYT_clip(file_name: str):
     with open(file_name) as json_file:
@@ -14,7 +29,7 @@ def parse_PHYT_clip(file_name: str):
         perp_frames = []
         victim_frames = []
 
-        for frame in data:
+        for frame in data[-25:]:
             perp = frame["perp"]
             victim = frame["victim"]
 
@@ -29,6 +44,7 @@ def parse_PHYT_clip(file_name: str):
         perp_frames = get_joints(np.array(perp_frames, dtype=np.float32), 25)
         victim_frames = get_joints(np.array(victim_frames, dtype=np.float32), 25)
 
+        
         return perp_frames, victim_frames
 
 
@@ -70,8 +86,8 @@ def get_joints(player_frames : np.ndarray, nb_joints):
     player_c = player_frames[:, 2::3]
 
     # Create an empty array with appropriate size
-    player_frames = np.empty((player_frames.shape[0] * 3, nb_joints), dtype=player_frames.dtype)
-
+    player_frames = np.zeros((player_frames.shape[0] * 3, nb_joints), dtype=player_frames.dtype)
+    
     # Merge data points into a single 2D array
     player_frames[0::3] = player_x
     player_frames[1::3] = player_y
@@ -85,23 +101,68 @@ def get_joints(player_frames : np.ndarray, nb_joints):
 
 
 class PHYTDataset(torch.utils.data.Dataset):
-    def __init__(self, clips_folder: str, transform=None, cuda=False):
+    def __init__(self, clips_folder: str, hparams,transform=None, cuda=False):
         self.cuda = cuda
+        self.hparams = hparams
 
-        files = []
+        inputFiles, outputFiles = [], []
         for (dirpath, dirnames, filenames) in os.walk(clips_folder):
-            files += [os.path.join(dirpath, file) for file in filenames if file.endswith(".json")]
-
+            for file in filenames:
+                if(file.endswith('.json')):
+                    inputFiles.append(os.path.join(dirpath, file))
+                    
+                if(file == 'label.out'):
+                    outputFiles.append(os.path.join(dirpath, file))
+                    
         self.clips = []
         self.y = []
 
-        self.y.append(torch.tensor([0,1], dtype=torch.float32))
-
-        for file_name in files:
-            perp, victim = parse_PHYT_clip(file_name)
-
-            self.clips.append(np.concatenate((perp, victim)))
-
+        
+        for input_name,output_name in zip(inputFiles,outputFiles):
+            perp, victim = parse_PHYT_clip(input_name)            
+            for (p1,p2) in [[perp,victim]]:
+                self.clips.append(np.concatenate((p1, p2)))
+                
+                #Get label
+                with open(output_name, 'r') as f:
+                    outputlabel = json.load(f)
+                self.y.append(torch.tensor(outputlabel['penaltyOnly'], dtype=torch.float32))
+        
+        global kFoldGenerator
+        if(kFoldGenerator is None):
+            kFoldGenerator = generatorKFold(len(self.clips), k=hparams.kfold)
+        train_index, test_index = next(kFoldGenerator)
+        self.testclips = [self.clips[i] for i in test_index]
+        self.clips = [self.clips[i] for i in train_index]
+        self.testy = [self.y[i] for i in test_index]
+        self.y = [self.y[i] for i in train_index]
+        
+        for clipList, labelList in zip([self.clips,self.testclips],[self.y,self.testy]):
+            #Data Augmentation. Changing Perp and Victim Place
+            if(self.hparams.changeOrder):
+                for clipIdx in range(len(clipList)):
+                    clips = clipList[clipIdx]
+                    label = labelList[clipIdx]
+                    perp = clips[:int(clips.shape[0]/2),:]
+                    victim = clips[int(clips.shape[0]/2):,:]
+                    
+                    clipList.append(np.concatenate((victim, perp)))
+                    labelList.append(label)
+            
+            if(self.hparams.randomJointOrder != 0):
+                for clipIdx in range(len(clipList)):
+                    clips = clipList[clipIdx]
+                    label = labelList[clipIdx]
+                    p1 = clips[:int(clips.shape[0]/2),:]
+                    p2 = clips[int(clips.shape[0]/2):,:]
+                    
+                    for _ in range(self.hparams.randomJointOrder):
+                        np.random.shuffle(p1)
+                        np.random.shuffle(p2)
+                        
+                        clipList.append(np.concatenate((p1, p2)))
+                        labelList.append(label)
+                        
     def __len__(self):
         return len(self.clips)
 

@@ -16,12 +16,13 @@ import datetime
 
 
 class FPhi(pl.LightningModule):
-    def __init__(self, hparams):
+    def __init__(self, hparams,sizeOfInputNode):
         super(FPhi, self).__init__()
         self.hparams = hparams
 
+        nb_nodes =  sizeOfInputNode#Input size is #ofJoints**2
         self.model = nn.Sequential(
-            nn.Linear(250, 50),
+            nn.Linear(nb_nodes, 50),
             nn.ReLU(),
             nn.Linear(50, 50),
             nn.ReLU(),

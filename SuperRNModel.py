@@ -193,6 +193,7 @@ if __name__ == '__main__':
         trainer.test()
         
         results = rnModel.testResults
+        accuList.append(sum(results)/len(results))
         print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),sum(results)/len(results))
 
     print('Done!')

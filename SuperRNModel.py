@@ -26,7 +26,7 @@ def add_model_specific_args(parent_parser, root_dir):
     parser.add_argument('--full_gpu', action='store_true')
 
     # training params (opt)
-    parser.add_argument('--patience', default=2, type=int)
+    parser.add_argument('--patience', default=4, type=int)
     parser.add_argument('--kfold', default=1, type=int)
     parser.add_argument('--epochs', default=10, type=int)
     parser.add_argument('--optim', default='Adam', type=str)
@@ -61,8 +61,8 @@ class SuperRNModel(pl.LightningModule):
         
         if(self.isIntra):
             #Init Gmodel
-            self.g_model_intra_P1 = GTheta(hparams,numOfFrames,numOfJoints)
-            self.g_model_intra_P2 = GTheta(hparams,numOfFrames,numOfJoints)
+            self.g_model_intra = GTheta(hparams,numOfFrames,numOfJoints)
+            
             #Init FModel
             sizeFInput = 2 * math.factorial(numOfJoints)//math.factorial(2)//math.factorial(numOfJoints - 2)
             self.f_model = FPhi(hparams,sizeFInput)
@@ -89,8 +89,8 @@ class SuperRNModel(pl.LightningModule):
         if(self.isIntra):
             input_data_clip_combinations_P1 = get_combinations_intra(p1)
             input_data_clip_combinations_P2 = get_combinations_intra(p2)
-            tensor_g_P1 = self.g_model_intra_P1(input_data_clip_combinations_P1)
-            tensor_g_P2 = self.g_model_intra_P2(input_data_clip_combinations_P2)
+            tensor_g_P1 = self.g_model_intra(input_data_clip_combinations_P1)
+            tensor_g_P2 = self.g_model_intra(input_data_clip_combinations_P2)
 
             # calculate sum and div
             average_output = torch.empty((0))
@@ -128,8 +128,8 @@ class SuperRNModel(pl.LightningModule):
         return DataLoader(self.dataset, batch_size=self.hparams.batch_size, shuffle=True)
     
     @pl.data_loader
-    def test_dataloader(self):
-        self.testResults = []
+    def val_dataloader(self):
+        self.valResults = []
         class temp():
             def __init__(self,x,y):
                 self.x = x
@@ -139,19 +139,24 @@ class SuperRNModel(pl.LightningModule):
                 return len(self.x)
             def __getitem__(self, index):
                 return self.x[index], self.y[index]
-        return DataLoader(temp(self.dataset.testclips,self.dataset.testy), batch_size=self.hparams.batch_size, shuffle=True)
+        return DataLoader(temp(self.dataset.valclips,self.dataset.valy), batch_size=self.hparams.batch_size, shuffle=True)
         # return DataLoader(temp(self.dataset.clips,self.dataset.y), batch_size=self.hparams.batch_size, shuffle=True)
     
-    def test_step(self,batch,batch_idx):
+    def validation_step(self,batch,batch_idx):
         x,y = batch
         y_hat = self.forward(x)
-        y_hat_rounded = torch.round(y_hat)
-        #print(y_hat_rounded,y, (y_hat_rounded == y).tolist()[0][0])
-        self.testResults.append((y_hat_rounded == y).tolist()[0][0])
-        return {'test_loss':self.criterion(y_hat,y.squeeze())}
-    def test_end(self, outputs):
-        avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean()
-        return {'test_loss': avg_loss}
+        tensor_size = y_hat.shape[0]
+        y_hat_rounded = torch.where(y_hat == torch.max(y_hat),torch.ones(1,tensor_size),torch.zeros(1,tensor_size))
+        accu = torch.equal(y_hat_rounded,y)
+        print(y_hat,y_hat_rounded,y,accu)
+        return {'val_accu': accu}
+    
+    def validation_epoch_end(self, outputs):
+        avg_accu = [x['val_accu'] for x in outputs]
+        avg_accu = sum(avg_accu)/len(avg_accu)
+        self.valResults.append(avg_accu)
+        print('\nAccuracy:',avg_accu)
+        return {'val_accu': avg_accu}
     
 if __name__ == '__main__':
     # use default args given by lightning
@@ -179,26 +184,29 @@ if __name__ == '__main__':
         rnModel = SuperRNModel(hyperparams)
 
         early_stop_callback = EarlyStopping(
-            monitor='loss',
-            min_delta=0.2,
+            monitor='val_accu',
+            min_delta=0.01,
             patience=hyperparams.patience,
             verbose=False,
             mode='max'
         )
 
-        trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=early_stop_callback, checkpoint_callback=None)
+        trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=False, checkpoint_callback=None)
 
 
         trainer.fit(rnModel)
-        trainer.test()
-        
-        results = rnModel.testResults
-        accuList.append(sum(results)/len(results))
-        print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),sum(results)/len(results))
+        if(hyperparams.kfold > 1):            
+            result = max(rnModel.valResults[5:])
+            accuList.append(result)
+            print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),result)
 
     print('Done!')
-    print('Global Accuracy:',sum(accuList)/len(accuList))
+    
+    if(hyperparams.kfold > 1):
+        print('Global Accuracy:',sum(accuList)/len(accuList))
 
+        
+#python SuperRNModel.py --intra --changeOrder --randomJointOrder 1 --epochs 20 --kfold 10
 
 
 

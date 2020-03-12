@@ -20,7 +20,9 @@ def generatorKFold(sizeOfElem,k=KFoldLength):
     else:
         kf = KFold(n_splits=KFoldLength)
         for train_index, test_index in kf.split(indexes):
-            yield train_index, test_index
+            train = [indexes[i] for i in train_index]
+            test = [indexes[i] for i in test_index]
+            yield train, test
 
 def parse_PHYT_clip(file_name: str):
     with open(file_name) as json_file:
@@ -132,12 +134,13 @@ class PHYTDataset(torch.utils.data.Dataset):
         if(kFoldGenerator is None):
             kFoldGenerator = generatorKFold(len(self.clips), k=hparams.kfold)
         train_index, test_index = next(kFoldGenerator)
-        self.testclips = [self.clips[i] for i in test_index]
+        self.valclips = [self.clips[i] for i in test_index]
         self.clips = [self.clips[i] for i in train_index]
-        self.testy = [self.y[i] for i in test_index]
+        self.valy = [self.y[i] for i in test_index]
         self.y = [self.y[i] for i in train_index]
         
-        for clipList, labelList in zip([self.clips,self.testclips],[self.y,self.testy]):
+        
+        for clipList, labelList in zip([self.clips,self.valclips],[self.y,self.valy]):
             #Data Augmentation. Changing Perp and Victim Place
             if(self.hparams.changeOrder):
                 for clipIdx in range(len(clipList)):

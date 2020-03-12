@@ -1,7 +1,8 @@
 {
     "Definitions": {
         "penaltyOnly": [
-            "Penalty",
+            "Tripping",
+            "Cross-Checking",
             "No Penalty"
         ],
         "penaltyAndPlayerRole": [
@@ -11,6 +12,7 @@
     },
     "penaltyOnly": [
         1,
+        0,
         0
     ],
     "penaltyAndPlayerRole": [

@@ -19,6 +19,7 @@ if __name__ == "__main__":
                 phytDataset[filename.split('.')[0]] = json.load(f)
     
     #3. Create output for each video.
+    count = []
     for filePath in filePaths:
         PHYT_Name = filePath.split("/")[0]
         clipID = int(filePath.split("/")[1].split("_")[1])
@@ -29,7 +30,7 @@ if __name__ == "__main__":
             for penalty in phytDataset[PHYT_Name]['video_description'][video]['penalties']:
                 if(penalty['clip_ID'] == clipID):
                     label = penalty['label']
-                    label = (phytDataset[PHYT_Name]['labels'][str(label)] == 'No Penalty')
+                    label = (phytDataset[PHYT_Name]['labels'][str(label)])
                     foundClip = True
                     break
             if(foundClip):
@@ -37,14 +38,17 @@ if __name__ == "__main__":
         
         #5. Write output file
         outjsn = {}
-        outjsn['Definitions'] = {'penaltyOnly':['Penalty','No Penalty'],'penaltyAndPlayerRole':['%perp','%victim']}
-        if(label):
-            outjsn['penaltyOnly'] = [0,1]
+        outjsn['Definitions'] = {'penaltyOnly':['Tripping','Cross-Checking','No Penalty'],'penaltyAndPlayerRole':['%perp','%victim']}
+        if(label == 'No Penalty'):
+            outjsn['penaltyOnly'] = [0,0,1]
             outjsn['penaltyAndPlayerRole'] = [0.5,0.5]
-        else:
-            outjsn['penaltyOnly'] = [1,0]
+        elif (label == 'Tripping'):
+            outjsn['penaltyOnly'] = [1,0,0]
             outjsn['penaltyAndPlayerRole'] = [1.0,0.0]
+        elif (label == 'Cross-Checking'):
+            outjsn['penaltyOnly'] = [0,1,0]
+            outjsn['penaltyAndPlayerRole'] = [1.0,0.0]
+        
         with open(DP10_FILTERED_POSES + filePath+ '/filtered_jsn/label.out','w') as f:
             json.dump(outjsn, f, ensure_ascii=False, indent=4)
-            
         

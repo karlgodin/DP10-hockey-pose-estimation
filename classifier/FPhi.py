@@ -26,7 +26,7 @@ class FPhi(pl.LightningModule):
             nn.ReLU(),
             nn.Linear(50, 50),
             nn.ReLU(),
-            nn.Linear(50, 2),
+            nn.Linear(50, 3),
             nn.Softmax(0)
         )
 

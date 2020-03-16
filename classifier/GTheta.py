@@ -10,6 +10,7 @@ import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.logging import TestTubeLogger
+from test_tube import HyperOptArgumentParser
 
 from classifier.joints import parse_clip
 from datasetCreation.scripts.DP10_DataAugmentation import DP10_getDistanceVector2Poses, DP10_getMotionVector2Poses
@@ -72,7 +73,9 @@ class GTheta(pl.LightningModule):
 
     @staticmethod
     def add_model_specific_args(parent_parser, root_dir):
-        parser = ArgumentParser(parents=[parent_parser])
+        #parser = ArgumentParser(parents=[parent_parser])
+        # stategy either grid_search or random_search
+        parser = HyperOptArgumentParser(strategy='grid_search', parents=[parent_parser])
 
         # Specify whether or not to put entire dataset on GPU
         parser.add_argument('--full_gpu', default=False, type=bool)
@@ -80,7 +83,7 @@ class GTheta(pl.LightningModule):
         # training params (opt)
         parser.add_argument('--patience', default=10, type=int)
         parser.add_argument('--optim', default='Adam', type=str)
-        parser.add_argument('--lr', default=0.001, type=float)
+        parser.add_argument('--lr', default=0.0001, type=float)
         parser.add_argument('--momentum', default=0.0, type=float)
         parser.add_argument('--nesterov', default=False, type=bool)
         parser.add_argument('--batch_size', default=32, type=int)

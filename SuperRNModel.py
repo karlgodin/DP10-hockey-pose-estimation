@@ -13,6 +13,8 @@ import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader
 
+from test_tube.hpc import SlurmCluster
+
 import numpy as np
 
 from pytorch_lightning.callbacks import EarlyStopping
@@ -56,6 +58,7 @@ class SuperRNModel(pl.LightningModule):
             return None
 
     def training_step(self, batch, batch_nb):
+
         # REQUIRED
         x,y = batch
         if self.hparams.full_gpu:
@@ -81,21 +84,10 @@ class SuperRNModel(pl.LightningModule):
     #
     #         return = fphi.forward(x)
 
-
-if __name__ == '__main__':
-    # use default args given by lightning
-    root_dir = os.path.split(os.path.dirname(sys.modules['__main__'].__file__))[0]
-    parent_parser = ArgumentParser(add_help=False)
-
-    # get the inputs for the black box(all the clips)
-    # parse each clip to its joints
-    #perp, victim = parse_clip()
-
-    # allow model to overwrite or extend args
-    parser = GTheta.add_model_specific_args(parent_parser, root_dir)
-    hyperparams = parser.parse_args()
-
+def train(hyperparams):
     rnModel = SuperRNModel(hyperparams)
+    print("hyperparameters")
+    print(hyperparams)
 
     for name, params in rnModel.named_parameters():
         print(name, '\t\t', params.shape)
@@ -114,6 +106,73 @@ if __name__ == '__main__':
 
     trainer.fit(rnModel)
 
+if __name__ == '__main__':
+    # use default args given by lightning
+    root_dir = os.path.split(os.path.dirname(sys.modules['__main__'].__file__))[0]
+    parent_parser = ArgumentParser(add_help=False)
+    # add the grid search
+
+    # get the inputs for the black box(all the clips)
+    # parse each clip to its joints
+    #perp, victim = parse_clip()
+    parser = GTheta.add_model_specific_args(parent_parser, root_dir)
+    hyperparams = parser.parse_args()
+    # could optimize the number of layers and nodes (parser.opt_list, parser.opt_range)
+
+    # train
+    train(hyperparams)
+
+    # rnModel = SuperRNModel(hyperparams)
+    # print("hyperparameters")
+    # print(hyperparams)
+    #
+    # for name, params in rnModel.named_parameters():
+    #     print(name, '\t\t', params.shape)
+    #
+    # print('\n')
+    #
+    # early_stop_callback = EarlyStopping(
+    #     monitor='val_acc',
+    #     min_delta=0.00,
+    #     patience=hyperparams.patience,
+    #     verbose=False,
+    #     mode='max'
+    # )
+    #
+    # trainer = Trainer(max_nb_epochs=1, early_stop_callback=early_stop_callback, checkpoint_callback=None)
+    #
+    # trainer.fit(rnModel)
+
+    # do grid search here
+    # subclass of argparse
 
 
+    # cluster = SlurmCluster(
+    #     hyperparam_optimizer=hyperparams,
+    #     log_path='/path/to/log/results/to',
+    #     python_cmd='python2'
+    # )
+    #
+    # # let the cluster know where to email for a change in job status (ie: complete, fail, etc...)
+    # cluster.notify_job_status(email='marine.huynh@yahoo.ca', on_done=True, on_fail=True)
+    # # set the job options. In this instance, we'll run 20 different models
+    # # each with its own set of hyperparameters giving each one 1 GPU (ie: taking up 20 GPUs)
+    # cluster.per_experiment_nb_gpus = 1
+    # cluster.per_experiment_nb_nodes = 1
+    # # we'll request 10GB of memory per node
+    # cluster.memory_mb_per_node = 100
+    # # set a walltime of 10 minues
+    # cluster.job_time = '10:00'
+    #
+    # # run the models on the cluster
+    # cluster.optimize_parallel_cluster_gpu(
+    #     train_model_for_main,
+    #     nb_trials=20,
+    #     job_name='my_grid_search_exp_name',
+    #     job_display_name='my_exp')
+
+    # the function seem to not work, why? would be straight forward
+    value = hyperparams.optimize_parallel_cpu(train, nb_trials=20, nb_workers=1)
+    #value = hyperparams.optimize_parallel_gpu(train, gpu_ids=['0', '1'])
+    print(value)
 

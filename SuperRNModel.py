@@ -1,10 +1,12 @@
 import os, sys
 from argparse import ArgumentParser
 from classifier.joints import parse_clip
-from classifier.GTheta import get_combinations
+
+from classifier.GTheta import get_combinations_inter, get_combinations_intra
 from classifier.GTheta import GTheta
 from classifier.FPhi import FPhi
-from classifier.dataset import PHYTDataset, SBUDataset
+from classifier.dataset import PHYTDataset, generatorKFold, SBUDataset
+import classifier.dataset
 import torch.tensor
 import torch.nn as nn
 
@@ -13,10 +15,8 @@ import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader
 
-import math
 import numpy as np
-
-from pytorch_lightning.callbacks import EarlyStopping
+import math
 
 def accuracy(y_pred, y):
     correct = (y == y_pred).sum().float()
@@ -24,40 +24,98 @@ def accuracy(y_pred, y):
     return acc
 
 
+from pytorch_lightning.callbacks import EarlyStopping
+
+def add_model_specific_args(parent_parser, root_dir):
+    parser = ArgumentParser(parents=[parent_parser])
+
+    # Specify whether or not to put entire dataset on GPU
+    parser.add_argument('--full_gpu', action='store_true')
+
+    # training params (opt)
+    parser.add_argument('--patience', default=4, type=int)
+    parser.add_argument('--kfold', default=1, type=int)
+    parser.add_argument('--epochs', default=10, type=int)
+    parser.add_argument('--optim', default='Adam', type=str)
+    parser.add_argument('--lr', default=0.0001, type=float)
+    parser.add_argument('--momentum', default=0.0, type=float)
+    parser.add_argument('--nesterov', action='store_true')
+    parser.add_argument('--changeOrder', action='store_true')
+    parser.add_argument('--randomJointOrder', default=0, type=int)
+    parser.add_argument('--batch_size', default=1, type=int)
+    parser.add_argument('--inter', action='store_true')
+    parser.add_argument('--intra', action='store_true')
+    parser.add_argument('--dataset', default='PHYT', type=str)
+    return parser
+
+
 class SuperRNModel(pl.LightningModule):
     def __init__(self, hparams):
         super(SuperRNModel, self).__init__()
         self.hparams = hparams
 
-        self.g_model = GTheta(hparams)
-        self.f_model = FPhi(hparams)
+        self.isInter = self.hparams.inter and not self.hparams.intra
+        self.isIntra = not self.hparams.inter and self.hparams.intra
 
-        dataset = SBUDataset('classifier/SBUDataset')
-        self.criterion = nn.CrossEntropyLoss()
+        if hparams.dataset == "PHYT":
+            self.criterion = nn.BCELoss()
+            self.dataset = PHYTDataset('datasetCreation/FilteredPoses/',hparams)
+        elif hparams.dataset == "SBU":
+            self.criterion = nn.CrossEntropyLoss()
+            self.dataset = SBUDataset('classifier/SBUDataset', hparams)
 
-        [training_dataset, validation_dataset] = torch.utils.data.random_split(dataset, [round(len(dataset) * 0.9), round(len(dataset) * 0.1)])
-        self.train_dataset = training_dataset
-        self.val_dataset = validation_dataset
-
-
-
+        #Load dataset and find its size
+        numOfFrames = (len(self.dataset.clips[0][0])-1)//3
+        numOfJoints = len(self.dataset.clips[0])//2
+        
+        if(self.isInter):
+            #Init Gmodel
+            self.g_model_inter = GTheta(hparams)
+            #Init FModel
+            self.f_model = FPhi(hparams)
+        
+        if(self.isIntra):
+            #Init Gmodel
+            self.g_model_intra = GTheta(hparams)
+            
+            #Init FModel
+            sizeFInput = 2 * math.factorial(numOfJoints)//math.factorial(2)//math.factorial(numOfJoints - 2)
+            self.f_model = FPhi(hparams)
 
     def forward(self, x):
         # numpy matrix of all combination of inter joints
 
-        perp = x[:,:int(x.shape[1]/2),:]
-        victim = x[:,int(x.shape[1]/2):,:]
+        p1 = x[:,:int(x.shape[1]/2),:]
+        p2 = x[:,int(x.shape[1]/2):,:]
+        
+        if(self.isInter):
+            input_data_clip_combinations = get_combinations_inter(p1, p2)
+            tensor_g = self.g_model_inter(input_data_clip_combinations)
 
-        input_data_clip_combinations = get_combinations(perp, victim)
-        tensor_g = self.g_model(input_data_clip_combinations)
+            # calculate sum and div
+            sum = torch.sum(tensor_g, dim=1)
+            size_output_G = tensor_g.shape[1]
+            average_output = sum / size_output_G
 
-        # calculate sum and div
-        sum = torch.sum(tensor_g, dim=1)
-        size_output_G = tensor_g.shape[1]
-        average_output = sum / size_output_G
+            tensor_classification = self.f_model(average_output)
+            
+        if(self.isIntra):
+            input_data_clip_combinations_P1 = get_combinations_intra(p1)
+            input_data_clip_combinations_P2 = get_combinations_intra(p2)
+            tensor_g_P1 = self.g_model_intra(input_data_clip_combinations_P1)
+            tensor_g_P2 = self.g_model_intra(input_data_clip_combinations_P2)
 
-        tensor_classification = self.f_model(average_output)
+            # calculate sum and div
+            average_output = torch.empty((0))
+            for tensor_g in [tensor_g_P1,tensor_g_P1]:
+                sum = torch.sum(tensor_g, dim=1)
+                size_output_G = tensor_g.shape[1]
+                average_output_temp = sum / size_output_G
+                average_output = torch.cat([average_output, average_output_temp], dim=1)
+                
+            tensor_classification = self.f_model(average_output)
         return tensor_classification
+
 
     def configure_optimizers(self):
         if self.hparams.optim == 'Adam':
@@ -74,69 +132,102 @@ class SuperRNModel(pl.LightningModule):
             x = x.cuda()
             y = y.cuda()
         y_hat = self.forward(x)
-        loss = self.criterion(y_hat, torch.max(y, 1)[1])
+        if self.hparams.dataset == "PHYT":
+            loss = self.criterion(y_hat.squeeze(), y.squeeze())
+        elif self.hparams.dataset == "SBU":
+            loss = self.criterion(y_hat, torch.max(y, 1)[1])
+
         tensorboard_logs = {'train_loss': loss}
         return {'loss': loss, 'log': tensorboard_logs}
 
-    def validation_step(self, batch, batch_nb):
-        # OPTIONAL
-        x, y = batch
-        if self.hparams.full_gpu:
-            x = x.cuda()
-            y = y.cuda()
-        y_hat = self.forward(x)
-        return {'val_loss': self.criterion(y_hat, torch.max(y, 1)[1]), 'val_acc': accuracy(torch.argmax(y_hat, 1), torch.max(y, 1)[1])}
-
-    def validation_end(self, outputs):
-        # OPTIONAL
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        avg_acc = torch.stack([x['val_acc'] for x in outputs]).mean()
-        tensorboard_logs = {'val_loss': avg_loss, 'val_acc': avg_acc}
-        return {'avg_val_loss': avg_loss, 'avg_val_acc': avg_acc, 'log': tensorboard_logs}
 
     @pl.data_loader
     def train_dataloader(self):
         # REQUIRED
-        return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, shuffle=True)
+        return DataLoader(self.dataset, batch_size=self.hparams.batch_size, shuffle=True)
+
 
     @pl.data_loader
     def val_dataloader(self):
-        # OPTIONAL
-        return DataLoader(self.val_dataset, batch_size=self.hparams.batch_size, shuffle=False)
-
+        self.valResults = []
+        class temp():
+            def __init__(self,x,y):
+                self.x = x
+                self.y = y
+            
+            def __len__(self):
+                return len(self.x)
+            def __getitem__(self, index):
+                return self.x[index], self.y[index]
+        return DataLoader(temp(self.dataset.valclips,self.dataset.valy), batch_size=self.hparams.batch_size, shuffle=True)
+        # return DataLoader(temp(self.dataset.clips,self.dataset.y), batch_size=self.hparams.batch_size, shuffle=True)
+    
+    def validation_step(self,batch,batch_idx):
+        x,y = batch
+        y_hat = self.forward(x)
+        tensor_size = y_hat.shape[0]
+        y_hat_rounded = torch.where(y_hat == torch.max(y_hat),torch.ones(1,tensor_size),torch.zeros(1,tensor_size))
+        accu = torch.equal(y_hat_rounded,y)
+        #print(y_hat,y_hat_rounded,y,accu)
+        return {'val_accu': accu}
+    
+    def validation_epoch_end(self, outputs):
+        avg_accu = [x['val_accu'] for x in outputs]
+        avg_accu = sum(avg_accu)/len(avg_accu)
+        self.valResults.append(avg_accu)
+        print('\nAccuracy:',avg_accu)
+        return {'val_accu': avg_accu}
 
 if __name__ == '__main__':
     # use default args given by lightning
     root_dir = os.path.split(os.path.dirname(sys.modules['__main__'].__file__))[0]
     parent_parser = ArgumentParser(add_help=False)
 
-    # get the inputs for the black box(all the clips)
-    # parse each clip to its joints
-    #perp, victim = parse_clip()
-
+    
     # allow model to overwrite or extend args
-    parser = GTheta.add_model_specific_args(parent_parser, root_dir)
+    parser = add_model_specific_args(parent_parser, root_dir)
     hyperparams = parser.parse_args()
+    
+    #Check to see if inter or intra or inter+intra
+    if(not hyperparams.inter and not hyperparams.intra):
+        class noTypeSelected(Exception):
+            def __init__(self,s):
+                pass
+        raise noTypeSelected("Must select at least one: --inter, --intra")
+            
+    accuList = []
+    classifier.dataset.KFoldLength = hyperparams.kfold
+    for i in range(classifier.dataset.KFoldLength):
+        #Set Seeds
+        torch.manual_seed(0)
+        np.random.seed(0)
+            
+        rnModel = SuperRNModel(hyperparams)
 
-    rnModel = SuperRNModel(hyperparams)
+        early_stop_callback = EarlyStopping(
+            monitor='val_accu',
+            min_delta=0.01,
+            patience=hyperparams.patience,
+            verbose=False,
+            mode='max'
+        )
 
-    for name, params in rnModel.named_parameters():
-        print(name, '\t\t', params.shape)
+        trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=False, checkpoint_callback=None)
 
-    print('\n')
 
-    early_stop_callback = EarlyStopping(
-        monitor='val_acc',
-        min_delta=0.00,
-        patience=hyperparams.patience,
-        verbose=False,
-        mode='max'
-    )
+        trainer.fit(rnModel)
+        if(hyperparams.kfold > 1):            
+            result = max(rnModel.valResults[5:])
+            accuList.append(result)
+            print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),result)
 
-    trainer = Trainer(max_nb_epochs=200, early_stop_callback=early_stop_callback, checkpoint_callback=None)
+    print('Done!')
+    
+    if(hyperparams.kfold > 1):
+        print('Global Accuracy:',sum(accuList)/len(accuList))
 
-    trainer.fit(rnModel)
-
+        
+#python SuperRNModel.py --intra --changeOrder --randomJointOrder 1 --epochs 20 --kfold 10
 
 
 

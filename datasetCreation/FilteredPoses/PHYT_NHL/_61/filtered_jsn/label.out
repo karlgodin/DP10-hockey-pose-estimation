@@ -1,0 +1,22 @@
+{
+    "Definitions": {
+        "penaltyOnly": [
+            "Tripping",
+            "Cross-Checking",
+            "No Penalty"
+        ],
+        "penaltyAndPlayerRole": [
+            "%perp",
+            "%victim"
+        ]
+    },
+    "penaltyOnly": [
+        0,
+        1,
+        0
+    ],
+    "penaltyAndPlayerRole": [
+        1.0,
+        0.0
+    ]
+}

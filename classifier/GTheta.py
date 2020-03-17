@@ -2,7 +2,7 @@ from torch import nn
 import torch.utils.data
 from torch.utils.data import DataLoader
 import torch.optim
-
+from classifier.dataset import target_frame_amount
 import itertools
 
 # Pytorch Lightning
@@ -20,22 +20,22 @@ from argparse import ArgumentParser
 import datetime
 
 class GTheta(pl.LightningModule):
-    def __init__(self, hparams,numOfFrames,numOfJoints):
+    def __init__(self, hparams):
         super(GTheta, self).__init__()
-        #print(f"[{datetime.datetime.now()}] Hyperparameters\n{hparams}")
         self.hparams = hparams
 
         # define model architecture
         # where 1000 is the number of frames * 3(x, y, c) * 2 (2 joints)
-        nb_nodes =  numOfFrames*8 + 1#Input size is #ofFrames*8+1
+        nb_nodes = target_frame_amount * 3 * 2 + 2 + target_frame_amount * 2 - 1
         self.model = nn.Sequential(
-            nn.Linear(nb_nodes, nb_nodes),
+            nn.Linear(nb_nodes, 1000),
             nn.ReLU(),
-            nn.Linear(nb_nodes, nb_nodes),
+            nn.Linear(1000, 1000),
             nn.ReLU(),
-            nn.Linear(nb_nodes, nb_nodes),
+            nn.Linear(1000, 1000),
             nn.ReLU(),
-            nn.Linear(nb_nodes, 250)
+            nn.Linear(1000, 500),
+            nn.Dropout(0.1)
         )
 
         if self.hparams.full_gpu:
@@ -55,17 +55,91 @@ class GTheta(pl.LightningModule):
         else:
             raise ValueError(f'[ERROR] Invalid optimizer {self.hparams.optim}')
 
-    @pl.data_loader
-    def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, shuffle=True)
 
-    @pl.data_loader
-    def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self.hparams.batch_size, shuffle=False)
 
-    @pl.data_loader
-    def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.hparams.batch_size, shuffle=False)
+# have the pairs of joints together to feed in the network
+def get_combinations_inter(perps: torch.FloatTensor, victims: torch.FloatTensor):
+    num_distances = int((perps.size()[2] - 1) / 3)
+
+    outputs = torch.empty(perps.size()[0], perps.size()[1] * perps.size()[1],
+                          perps.size()[2] * 2 + 2 * num_distances - 1)
+
+    for count, perp in enumerate(perps):
+        victim = victims[count]
+        sizeOfPerp = perp.size()
+        nb_position_input = sizeOfPerp[1]
+        array_body_index = np.arange(sizeOfPerp[0])
+        nb_frames = int((nb_position_input - 1) / 3)
+
+        values = itertools.product(array_body_index, repeat=2)
+        nb_players = 2
+        # TODO transform this into good comment that describes size of data: sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
+        output = []
+        for x in values:
+            joint1 = perp[x[0]]
+            joint2 = victim[x[1]]
+
+            x_1 = joint1[::3]
+            x_1 = x_1[:-1]
+            x_2 = joint2[::3]
+            x_2 = x_2[:-1]
+
+            y_1 = joint1[1::3]
+            y_2 = joint2[1::3]
+
+            distances = torch.sqrt((x_1 - x_2) ** 2 + (y_1 - y_2) ** 2)
+
+            motions = torch.sqrt((x_1[:-1] - x_2[1:]) ** 2 + (y_1[:-1] - y_2[1:]) ** 2)
+
+            # put on the same row for the matrix: joint1, joint2, distances, motions
+            iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
+            output.append(iteration1)
+
+        output = torch.stack(output, dim=0)
+        outputs[count] = output
+    return outputs
+
+
+def get_combinations_intra(p1: torch.FloatTensor):
+    num_distances = int((p1.size()[2] - 1) / 3)
+
+    outputs = torch.empty(p1.size()[0], int((p1.size()[1] * p1.size()[1] - p1.size()[1])/2),
+                          p1.size()[2] * 2 + 2 * num_distances - 1)
+
+    for count, player1 in enumerate(p1):
+        sizeOfPlayer1 = player1.size()
+        nb_position_input = sizeOfPlayer1[1]
+        array_body_index = np.arange(sizeOfPlayer1[0])
+        nb_frames = int((nb_position_input - 1) / 3)
+
+        values = itertools.combinations(array_body_index, 2)
+        nb_players = 2
+        # TODO transform this into good comment that describes size of data: sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
+        output = []
+        for x in values:
+            joint1 = player1[x[0]]
+            joint2 = player1[x[1]]
+
+            x_1 = joint1[::3]
+            x_1 = x_1[:-1]
+            x_2 = joint2[::3]
+            x_2 = x_2[:-1]
+
+            y_1 = joint1[1::3]
+            y_2 = joint2[1::3]
+
+            distances = torch.sqrt((x_1 - x_2) ** 2 + (y_1 - y_2) ** 2)
+
+            motions = torch.sqrt((x_1[:-1] - x_2[1:]) ** 2 + (y_1[:-1] - y_2[1:]) ** 2)
+
+            # put on the same row for the matrix: joint1, joint2, distances, motions
+            iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
+            output.append(iteration1)
+
+        output = torch.stack(output, dim=0)
+        outputs[count] = output
+    return outputs
+
 
 def main(hparams, version=None):
     torch.manual_seed(0)
@@ -86,14 +160,6 @@ def main(hparams, version=None):
             create_git_tag=False
         )
 
-        # early_stop_callback = EarlyStopping(
-        #     monitor='val_acc',
-        #     min_delta=0.00,
-        #     patience=hparams.patience,
-        #     verbose=False,
-        #     mode='max'
-        # )
-
     checkpoint_callback = ModelCheckpoint(
         filepath=f'logs/{tt_logger.name}/version_{tt_logger.experiment.version}/checkpoints',
         save_best_only=True,
@@ -109,75 +175,6 @@ def main(hparams, version=None):
     trainer.fit(model)
     # trainer.test(model)
 
-# have the pairs of joints together to feed in the network
-def get_combinations_inter(perp: torch.FloatTensor, victim: torch.FloatTensor):
-    sizeOfPerp = perp.size()
-    nb_position_input = sizeOfPerp[2]
-    array_body_index = np.arange(25)
-    nb_frames = int(nb_position_input / 3)
-
-    values = itertools.product(array_body_index, repeat=2)
-    outputs = []
-    for x in values:
-        person1 = perp[0]
-        person2 = victim[0]
-        joint1 = person1[x[0]]
-        joint2 = person2[x[1]]
-
-        x_1 = joint1[::3]
-        x_1 = x_1[:-1]
-        x_2 = joint2[::3]
-        x_2 = x_2[:-1]
-
-        y_1 = joint1[1::3]
-        y_2 = joint2[1::3]
-
-        distances = torch.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
-
-        motions = torch.sqrt((x_1[:-1] - x_2[1:])**2 + (y_1[:-1] - y_2[1:])**2 )
-
-        # put on the same row for the matrix: joint1, joint2, distances, motions
-        iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
-        outputs.append(iteration1)
-    
-    #Shape is [(#ofJoints)**2, #ofFrames*8+1]
-    outputs = torch.stack(outputs, dim=0)
-    return outputs
-    
-# have the pairs of joints together to feed in the network
-def get_combinations_intra(p1: torch.FloatTensor):
-    sizeOfP1 = p1.size()
-    nb_position_input = sizeOfP1[2]
-    array_body_index = np.arange(25)
-    nb_frames = int(nb_position_input / 3)
-
-    values = itertools.combinations(array_body_index, 2)
-    outputs = []
-    for x in values:
-        person1 = p1[0]
-        joint1 = person1[x[0]]
-        joint2 = person1[x[1]]
-
-        x_1 = joint1[::3]
-        x_1 = x_1[:-1]
-        x_2 = joint2[::3]
-        x_2 = x_2[:-1]
-
-        y_1 = joint1[1::3]
-        y_2 = joint2[1::3]
-
-        distances = torch.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
-
-        motions = torch.sqrt((x_1[:-1] - x_2[1:])**2 + (y_1[:-1] - y_2[1:])**2 )
-        
-
-        # put on the same row for the matrix: joint1, joint2, distances, motions
-        iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
-        outputs.append(iteration1)
-    
-    #Shape is [(#ofJoints)!/2!/(#ofJoints - 2)!, #ofFrames*8+1]
-    outputs = torch.stack(outputs, dim=0)
-    return outputs
 
 if __name__ == '__main__':
     # use default args given by lightning
@@ -186,7 +183,7 @@ if __name__ == '__main__':
 
     # get the inputs
     perp, victim = parse_clip()
-    inter_combinations_joints = get_combinations(perp, victim)
+    inter_combinations_joints = get_combinations_inter(perp, victim)
     # allow model to overwrite or extend args
     parser = GTheta.add_model_specific_args(parent_parser, root_dir)
     hyperparams = parser.parse_args()

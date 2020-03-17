@@ -1,10 +1,11 @@
 import os, sys
 from argparse import ArgumentParser
 from classifier.joints import parse_clip
+
 from classifier.GTheta import get_combinations_inter, get_combinations_intra
 from classifier.GTheta import GTheta
 from classifier.FPhi import FPhi
-from classifier.dataset import PHYTDataset, generatorKFold
+from classifier.dataset import PHYTDataset, generatorKFold, SBUDataset
 import classifier.dataset
 import torch.tensor
 import torch.nn as nn
@@ -16,6 +17,12 @@ from torch.utils.data import DataLoader
 
 import numpy as np
 import math
+
+def accuracy(y_pred, y):
+    correct = (y == y_pred).sum().float()
+    acc = correct/len(y)
+    return acc
+
 
 from pytorch_lightning.callbacks import EarlyStopping
 
@@ -38,6 +45,7 @@ def add_model_specific_args(parent_parser, root_dir):
     parser.add_argument('--batch_size', default=1, type=int)
     parser.add_argument('--inter', action='store_true')
     parser.add_argument('--intra', action='store_true')
+    parser.add_argument('--dataset', default='PHYT', type=str)
     return parser
 
 
@@ -45,33 +53,38 @@ class SuperRNModel(pl.LightningModule):
     def __init__(self, hparams):
         super(SuperRNModel, self).__init__()
         self.hparams = hparams
+
         self.isInter = self.hparams.inter and not self.hparams.intra
         self.isIntra = not self.hparams.inter and self.hparams.intra
 
+        if hparams.dataset == "PHYT":
+            self.criterion = nn.BCELoss()
+            self.dataset = PHYTDataset('datasetCreation/FilteredPoses/',hparams)
+        elif hparams.dataset == "SBU":
+            self.criterion = nn.CrossEntropyLoss()
+            self.dataset = SBUDataset('classifier/SBUDataset', hparams)
+
         #Load dataset and find its size
-        self.dataset = PHYTDataset('datasetCreation/FilteredPoses/',hparams)
         numOfFrames = (len(self.dataset.clips[0][0])-1)//3
         numOfJoints = len(self.dataset.clips[0])//2
         
         if(self.isInter):
             #Init Gmodel
-            self.g_model_inter = GTheta(hparams,numOfFrames,numOfJoints)
+            self.g_model_inter = GTheta(hparams)
             #Init FModel
-            self.f_model = FPhi(hparams,numOfJoints**2)
+            self.f_model = FPhi(hparams)
         
         if(self.isIntra):
             #Init Gmodel
-            self.g_model_intra = GTheta(hparams,numOfFrames,numOfJoints)
+            self.g_model_intra = GTheta(hparams)
             
             #Init FModel
             sizeFInput = 2 * math.factorial(numOfJoints)//math.factorial(2)//math.factorial(numOfJoints - 2)
-            self.f_model = FPhi(hparams,sizeFInput)
-        
-        self.criterion = nn.BCELoss()
-
+            self.f_model = FPhi(hparams)
 
     def forward(self, x):
         # numpy matrix of all combination of inter joints
+
         p1 = x[:,:int(x.shape[1]/2),:]
         p2 = x[:,int(x.shape[1]/2):,:]
         
@@ -98,10 +111,11 @@ class SuperRNModel(pl.LightningModule):
                 sum = torch.sum(tensor_g, dim=1)
                 size_output_G = tensor_g.shape[1]
                 average_output_temp = sum / size_output_G
-                average_output = torch.cat([average_output, average_output_temp], dim=0)
+                average_output = torch.cat([average_output, average_output_temp], dim=1)
                 
             tensor_classification = self.f_model(average_output)
         return tensor_classification
+
 
     def configure_optimizers(self):
         if self.hparams.optim == 'Adam':
@@ -118,15 +132,21 @@ class SuperRNModel(pl.LightningModule):
             x = x.cuda()
             y = y.cuda()
         y_hat = self.forward(x)
-        loss = self.criterion(y_hat, y.squeeze())
+        if self.hparams.dataset == "PHYT":
+            loss = self.criterion(y_hat.squeeze(), y.squeeze())
+        elif self.hparams.dataset == "SBU":
+            loss = self.criterion(y_hat, torch.max(y, 1)[1])
+
         tensorboard_logs = {'train_loss': loss}
         return {'loss': loss, 'log': tensorboard_logs}
+
 
     @pl.data_loader
     def train_dataloader(self):
         # REQUIRED
         return DataLoader(self.dataset, batch_size=self.hparams.batch_size, shuffle=True)
-    
+
+
     @pl.data_loader
     def val_dataloader(self):
         self.valResults = []
@@ -148,7 +168,7 @@ class SuperRNModel(pl.LightningModule):
         tensor_size = y_hat.shape[0]
         y_hat_rounded = torch.where(y_hat == torch.max(y_hat),torch.ones(1,tensor_size),torch.zeros(1,tensor_size))
         accu = torch.equal(y_hat_rounded,y)
-        print(y_hat,y_hat_rounded,y,accu)
+        #print(y_hat,y_hat_rounded,y,accu)
         return {'val_accu': accu}
     
     def validation_epoch_end(self, outputs):
@@ -157,11 +177,12 @@ class SuperRNModel(pl.LightningModule):
         self.valResults.append(avg_accu)
         print('\nAccuracy:',avg_accu)
         return {'val_accu': avg_accu}
-    
+
 if __name__ == '__main__':
     # use default args given by lightning
     root_dir = os.path.split(os.path.dirname(sys.modules['__main__'].__file__))[0]
     parent_parser = ArgumentParser(add_help=False)
+
     
     # allow model to overwrite or extend args
     parser = add_model_specific_args(parent_parser, root_dir)

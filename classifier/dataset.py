@@ -1,10 +1,10 @@
 import torch.utils.data
 import os
-from classifier.joints import parse_clip
 import csv
 import numpy as np
 import json
-import itertools
+
+
 from sklearn.model_selection import KFold
 
 import torch
@@ -12,6 +12,9 @@ import random
 
 kFoldGenerator = None
 KFoldLength = 1
+
+target_frame_amount = 15
+
 def generatorKFold(sizeOfElem,k=KFoldLength):
     indexes = [i for i in range(sizeOfElem)]
     random.shuffle(indexes)
@@ -24,6 +27,7 @@ def generatorKFold(sizeOfElem,k=KFoldLength):
             test = [indexes[i] for i in test_index]
             yield train, test
 
+
 def parse_PHYT_clip(file_name: str):
     with open(file_name) as json_file:
         data = json.load(json_file)
@@ -31,7 +35,7 @@ def parse_PHYT_clip(file_name: str):
         perp_frames = []
         victim_frames = []
 
-        for frame in data[-25:]:
+        for frame in data:
             perp = frame["perp"]
             victim = frame["victim"]
 
@@ -42,11 +46,29 @@ def parse_PHYT_clip(file_name: str):
             perp_frames.append(perp)
             victim_frames.append(victim)
 
-        # Transpose dataset
-        perp_frames = get_joints(np.array(perp_frames, dtype=np.float32), 25)
-        victim_frames = get_joints(np.array(victim_frames, dtype=np.float32), 25)
+        perp_frames = np.array(perp_frames, dtype=np.float32)
+        victim_frames = np.array(victim_frames, dtype=np.float32)
 
-        
+
+        num_frames = perp_frames.shape[0]
+
+        # Take 15 middle frames if at least target frame amount frames
+        if num_frames >= target_frame_amount:
+            perp_frames = perp_frames[int(num_frames / 2) - int(target_frame_amount / 2):, :]
+            perp_frames = perp_frames[:target_frame_amount, :]
+
+            victim_frames = victim_frames[int(num_frames / 2) - int(target_frame_amount / 2):, :]
+            victim_frames = victim_frames[:target_frame_amount, :]
+        else:  # Add zeros for final frames if less than 15 frames
+            perp_frames = np.vstack(
+                (perp_frames, np.zeros((target_frame_amount - num_frames, 45), dtype=np.float32)))
+            victim_frames = np.vstack(
+                (victim_frames, np.zeros((target_frame_amount - num_frames, 45), dtype=np.float32)))
+
+        # Transpose dataset
+        perp_frames = get_joints(perp_frames, 25)
+        victim_frames = get_joints(victim_frames, 25)
+
         return perp_frames, victim_frames
 
 
@@ -56,8 +78,21 @@ def parse_SBU_clip(file_name):
 
         frame_list = list(csv_reader)
         frame_list = np.array(frame_list, dtype=np.float32)
+        num_frames = frame_list.shape[0]
         perp_frames = frame_list[:,1:46]
         victim_frames = frame_list[:,46:]
+
+        #Take 15 middle frames if at least 15 frames
+        if num_frames >= target_frame_amount:
+            perp_frames = perp_frames[int(num_frames/2)- int(target_frame_amount/2):,:]
+            perp_frames = perp_frames[:target_frame_amount,:]
+
+            victim_frames = victim_frames[int(num_frames / 2) - int(target_frame_amount/2):, :]
+            victim_frames = victim_frames[:target_frame_amount, :]
+        else: # Add zeros for final frames if less than 15 frames
+            perp_frames = np.vstack((perp_frames, np.zeros((target_frame_amount-num_frames, 45), dtype=np.float32)))
+            victim_frames = np.vstack((victim_frames, np.zeros((target_frame_amount-num_frames, 45), dtype=np.float32)))
+
 
         perp_frames = get_joints(perp_frames, 15)
         victim_frames = get_joints(victim_frames, 15)
@@ -88,8 +123,8 @@ def get_joints(player_frames : np.ndarray, nb_joints):
     player_c = player_frames[:, 2::3]
 
     # Create an empty array with appropriate size
-    player_frames = np.zeros((player_frames.shape[0] * 3, nb_joints), dtype=player_frames.dtype)
-    
+    player_frames = np.empty((player_frames.shape[0] * 3, nb_joints), dtype=player_frames.dtype)
+
     # Merge data points into a single 2D array
     player_frames[0::3] = player_x
     player_frames[1::3] = player_y
@@ -166,6 +201,7 @@ class PHYTDataset(torch.utils.data.Dataset):
                         clipList.append(np.concatenate((p1, p2)))
                         labelList.append(label)
                         
+
     def __len__(self):
         return len(self.clips)
 
@@ -174,7 +210,7 @@ class PHYTDataset(torch.utils.data.Dataset):
 
 
 class SBUDataset(torch.utils.data.Dataset):
-    def __init__(self, SBU_data_folder: str, cuda=False):
+    def __init__(self, SBU_data_folder: str, hparams, cuda=False, ):
         self.cuda = cuda
 
         files = []
@@ -185,10 +221,21 @@ class SBUDataset(torch.utils.data.Dataset):
         self.y = []
 
         for file_name in files:
-            self.clips.append(parse_SBU_clip(file_name))
+            temp = np.concatenate(parse_SBU_clip(file_name))
+            self.clips.append(temp)
             arr = [0] * 8
-            arr[int(file_name.split('_')[1]) - 1] = 1
-            self.y.append(file_name)
+            arr[int(file_name.split('_')[-4]) - 1] = 1
+            self.y.append(torch.tensor(arr, dtype=torch.float32))
+
+        global kFoldGenerator
+
+        if (kFoldGenerator is None):
+            kFoldGenerator = generatorKFold(len(self.clips), k=hparams.kfold)
+        train_index, test_index = next(kFoldGenerator)
+        self.valclips = [self.clips[i] for i in test_index]
+        self.clips = [self.clips[i] for i in train_index]
+        self.valy = [self.y[i] for i in test_index]
+        self.y = [self.y[i] for i in train_index]
 
     def __len__(self):
         return len(self.clips)

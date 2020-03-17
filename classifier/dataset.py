@@ -224,7 +224,7 @@ class SBUDataset(torch.utils.data.Dataset):
             temp = np.concatenate(parse_SBU_clip(file_name))
             self.clips.append(temp)
             arr = [0] * 8
-            arr[int(file_name.split('\\')[1].split('_')[1]) - 1] = 1
+            arr[int(file_name.split('_')[-4]) - 1] = 1
             self.y.append(torch.tensor(arr, dtype=torch.float32))
 
         global kFoldGenerator

@@ -57,6 +57,7 @@ class SuperRNModel(pl.LightningModule):
         self.isInter = self.hparams.inter and not self.hparams.intra
         self.isIntra = not self.hparams.inter and self.hparams.intra
 
+        print('We are using:',hparams.dataset)
         if hparams.dataset == "PHYT":
             self.criterion = nn.BCELoss()
             self.dataset = PHYTDataset('datasetCreation/FilteredPoses/',hparams)
@@ -90,6 +91,10 @@ class SuperRNModel(pl.LightningModule):
         
         if(self.isInter):
             input_data_clip_combinations = get_combinations_inter(p1, p2)
+            
+            if(self.hparams.full_gpu):
+                input_data_clip_combinations = input_data_clip_combinations.cuda()
+            
             tensor_g = self.g_model_inter(input_data_clip_combinations)
 
             # calculate sum and div
@@ -102,11 +107,19 @@ class SuperRNModel(pl.LightningModule):
         if(self.isIntra):
             input_data_clip_combinations_P1 = get_combinations_intra(p1)
             input_data_clip_combinations_P2 = get_combinations_intra(p2)
+            
+            if(self.hparams.full_gpu):
+                input_data_clip_combinations_P1 = input_data_clip_combinations_P1.cuda()
+                input_data_clip_combinations_P2 = input_data_clip_combinations_P2.cuda()
+                
             tensor_g_P1 = self.g_model_intra(input_data_clip_combinations_P1)
             tensor_g_P2 = self.g_model_intra(input_data_clip_combinations_P2)
 
             # calculate sum and div
             average_output = torch.empty((0))
+            if(self.hparams.full_gpu):
+                average_output = average_output.cuda()
+            
             for tensor_g in [tensor_g_P1,tensor_g_P1]:
                 sum = torch.sum(tensor_g, dim=1)
                 size_output_G = tensor_g.shape[1]
@@ -164,11 +177,15 @@ class SuperRNModel(pl.LightningModule):
     
     def validation_step(self,batch,batch_idx):
         x,y = batch
+        y = y.cuda() if self.hparams.full_gpu else y
         y_hat = self.forward(x)
         tensor_size = y_hat.shape[0]
-        y_hat_rounded = torch.where(y_hat == torch.max(y_hat),torch.ones(1,tensor_size),torch.zeros(1,tensor_size))
+        ones = torch.ones(1,tensor_size).cuda() if self.hparams.full_gpu else torch.ones(1,tensor_size) 
+        zeros = torch.zeros(1,tensor_size).cuda() if self.hparams.full_gpu else torch.zeros(1,tensor_size)        
+        y_hat_rounded = torch.where(y_hat == torch.max(y_hat),ones,zeros)
+        
         accu = torch.equal(y_hat_rounded,y)
-        #print(y_hat,y_hat_rounded,y,accu)
+        print(y_hat,y_hat_rounded,y,accu)
         return {'val_accu': accu}
     
     def validation_epoch_end(self, outputs):

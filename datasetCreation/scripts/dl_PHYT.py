@@ -22,7 +22,7 @@ if __name__ == "__main__" :
     elif(len(sys.argv) == 2):
         json_filepath = sys.argv[1]
     else:
-        json_filepath = "../json/PHYT.json"
+        json_filepath = "../json/PHYT_NHL.json"
         
     #Check OS
     OS = checkOS()
@@ -40,8 +40,11 @@ if __name__ == "__main__" :
         if(OS == "WINDOWS"):
             os.system('youtube-dl.exe ' + url +' -o ../Videos/%(id)s.%(ext)s -f mp4')
         elif(OS == "LINUX"):
-            ydl_opts = {'outtmpl': '../Videos/%(id)s.%(ext)s',
-                        'format':'mp4'}
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-        
+            try:
+                ydl_opts = {'outtmpl': '../Videos/%(id)s.%(ext)s',
+                            'format':'mp4'}
+                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([url])
+            except:
+                pass
+            

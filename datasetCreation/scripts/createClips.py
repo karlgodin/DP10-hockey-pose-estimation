@@ -28,7 +28,7 @@ if __name__ == "__main__":
 			    clip_ID = penalty['clip_ID']
 			    start_time = penalty['start_time']
 			    end_time = penalty['end_time']
-			    
+                
 			    #Load Video
 			    cap = cv2.VideoCapture(VideoPath + videoID + ".mp4")
 			    
@@ -43,20 +43,19 @@ if __name__ == "__main__":
 			    
 			    #Create output
 			    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+			    print(ClipPath+PHYTfile.split('.')[0]+'/_'+str(clip_ID)+".mp4")
 			    out = cv2.VideoWriter(ClipPath+PHYTfile.split('.')[0]+'/_'+str(clip_ID)+".mp4",fourcc, fps, (width,height))
 			    
 			    #set frame 
 			    cap.set(cv2.CAP_PROP_POS_FRAMES,startFrame)
 			    
 			    #Copy over frame from cap to out
+			    print("%d %d %d"%(clip_ID,start_time,end_time))
 			    for _ in range(endFrame - startFrame):
 				ret, frame = cap.read()
 				if not ret:
 				    break
 				out.write(frame)
-				
-				
-			    print("%d %d %d"%(clip_ID,start_time,end_time))
 			    
 			    #Release videos
 			    cap.release()

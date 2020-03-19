@@ -1,8 +1,10 @@
 import sys
 
 def main():
-
+    
     f = open("..\csv\youtubePenaltiesList.csv",'a')
+    
+    
 
     #Check number of arguments is 3
     if(len(sys.argv) != 12):
@@ -46,6 +48,19 @@ def main():
     startTime = 3600*int(startTime[0]) + 60*int(startTime[1]) + int(startTime[2])
     endTime = 3600*int(endTime[0]) + 60*int(endTime[1]) + int(endTime[2])
 
+    print(URL +","+
+        res + "," +
+        str(startTime)+","+
+        str(endTime)+","+
+        label + "," +
+        shot_type + "," +
+        middle_rink + "," +
+        has_fighting + "," +
+        two_players + "," +
+        has_caption  + "," +
+        is_separable +
+        "\n")
+
     #Write to CSV
     f.write(
         URL +","+
@@ -60,6 +75,8 @@ def main():
         has_caption  + "," +
         is_separable +
         "\n")
+
+    f.close()
 
 if __name__ == "__main__":
     main()

@@ -164,6 +164,16 @@ class PHYTDataset(torch.utils.data.Dataset):
                 with open(output_name, 'r') as f:
                     outputlabel = json.load(f)
                 self.y.append(torch.tensor(outputlabel['penaltyOnly'], dtype=torch.float32))
+                
+        #Display the distribution of dataset
+        dist = [0 for _ in range(len(self.y[0]))]
+        for y in self.y:
+            y_list = list(map(lambda x:int(x),y.numpy().tolist()))
+            dist[y_list.index(1)] += 1
+        
+        for definition, num in zip(outputlabel['Definitions']['penaltyOnly'],dist):
+            print('For label "{}",'.format(definition))
+            print('\t... {} clips'.format(num))
         
         global kFoldGenerator
         if(kFoldGenerator is None):

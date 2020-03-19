@@ -2,73 +2,51 @@
     "dataset_description": {
         "statisticsByLabel": {
             "Tripping": {
-                "twoPlayers": 8,
-                "seperable": 23,
-                "HD": 24,
-                "middleOfRink": 19,
-                "twoPlayersOrSeperable": 23,
-                "twoPlayersOrSeperableAndHDAndMiddle": 9,
-                "numOfClips": 30
+                "twoPlayers": 0,
+                "seperable": 0,
+                "HD": 0,
+                "middleOfRink": 0,
+                "twoPlayersOrSeperable": 0,
+                "twoPlayersOrSeperableAndHDAndMiddle": 0,
+                "numOfClips": 0
             },
             "Cross-Checking": {
-                "twoPlayers": 6,
-                "seperable": 17,
-                "HD": 26,
-                "middleOfRink": 15,
-                "twoPlayersOrSeperable": 17,
-                "twoPlayersOrSeperableAndHDAndMiddle": 8,
-                "numOfClips": 26
+                "twoPlayers": 0,
+                "seperable": 3,
+                "HD": 3,
+                "middleOfRink": 3,
+                "twoPlayersOrSeperable": 3,
+                "twoPlayersOrSeperableAndHDAndMiddle": 3,
+                "numOfClips": 3
             },
             "No Penalty": {
-                "twoPlayers": 6,
-                "seperable": 15,
-                "HD": 17,
-                "middleOfRink": 9,
-                "twoPlayersOrSeperable": 16,
-                "twoPlayersOrSeperableAndHDAndMiddle": 8,
-                "numOfClips": 17
+                "twoPlayers": 1,
+                "seperable": 14,
+                "HD": 14,
+                "middleOfRink": 2,
+                "twoPlayersOrSeperable": 14,
+                "twoPlayersOrSeperableAndHDAndMiddle": 2,
+                "numOfClips": 14
             }
         },
         "statisticsDataset": {
-            "twoPlayers": 20,
-            "seperable": 55,
-            "HD": 67,
-            "middleOfRink": 43,
-            "twoPlayersOrSeperable": 56,
-            "twoPlayersOrSeperableAndHDAndMiddle": 25,
-            "numOfClips": 73,
+            "twoPlayers": 1,
+            "seperable": 17,
+            "HD": 17,
+            "middleOfRink": 5,
+            "twoPlayersOrSeperable": 17,
+            "twoPlayersOrSeperableAndHDAndMiddle": 5,
+            "numOfClips": 17,
             "YoutubeVideos": {
                 "items": [
-                    "RqmmjdbrboE",
-                    "kB6svcQnJi4",
-                    "XWNDVDr7f_E",
                     "jjhxXPO9MZs",
-                    "m2qrIxck5vM",
-                    "xSti2ryY-hM",
-                    "snm2HcX1le4",
-                    "Y1i06JBYm6Q",
-                    "yeKw9CH0FTE",
-                    "ggv8awwZXWY",
-                    "9MJyWhkK9vw",
-                    "UIFAriIHBXQ",
-                    "4vjQeHDl4z0",
-                    "vQZIn0tURSs",
-                    "bVTaEmIvHU4",
-                    "FVf6LtnBATA",
-                    "t85RGd-WFQ8",
-                    "28fiV23XCEM",
-                    "FqrMeXTuz7U",
-                    "T3IfK2I7SOg",
-                    "oiktx2eLSCs",
-                    "sbFMpQKR4Io",
+                    "LaMTJz_03t4",
+                    "qtjU_svOLIg",
+                    "_8kcjqCh65k",
                     "VO01UCN2mhM",
-                    "Iyocj75AmMI",
-                    "pw39mLS6T64",
-                    "GyXwqy7DO0I",
-                    "qrIioG0gid8",
-                    "O43lshtQgWI"
+                    "JFpRmBgP5Fs"
                 ],
-                "count": 28
+                "count": 6
             }
         }
     },
@@ -83,329 +61,14 @@
         "2": "Long"
     },
     "video_description": {
-        "RqmmjdbrboE": {
-            "video_resolution": 1440,
-            "penalties": [
-                {
-                    "global_clip_ID": 99,
-                    "clip_ID": 0,
-                    "start_time": 32,
-                    "end_time": 38,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": true,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 100,
-                    "clip_ID": 1,
-                    "start_time": 45,
-                    "end_time": 50,
-                    "label": 1,
-                    "camera_shot": 2,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 101,
-                    "clip_ID": 2,
-                    "start_time": 68,
-                    "end_time": 71,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 102,
-                    "clip_ID": 3,
-                    "start_time": 72,
-                    "end_time": 77,
-                    "label": 1,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 103,
-                    "clip_ID": 4,
-                    "start_time": 88,
-                    "end_time": 91,
-                    "label": 1,
-                    "camera_shot": 2,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 104,
-                    "clip_ID": 5,
-                    "start_time": 108,
-                    "end_time": 111,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 105,
-                    "clip_ID": 6,
-                    "start_time": 206,
-                    "end_time": 210,
-                    "label": 1,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 106,
-                    "clip_ID": 7,
-                    "start_time": 427,
-                    "end_time": 430,
-                    "label": 1,
-                    "camera_shot": 2,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": true,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 107,
-                    "clip_ID": 8,
-                    "start_time": 505,
-                    "end_time": 508,
-                    "label": 1,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 108,
-                    "clip_ID": 9,
-                    "start_time": 550,
-                    "end_time": 552,
-                    "label": 1,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                }
-            ]
-        },
-        "kB6svcQnJi4": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 109,
-                    "clip_ID": 10,
-                    "start_time": 130,
-                    "end_time": 136,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 110,
-                    "clip_ID": 11,
-                    "start_time": 138,
-                    "end_time": 143,
-                    "label": 1,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 111,
-                    "clip_ID": 12,
-                    "start_time": 146,
-                    "end_time": 151,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 112,
-                    "clip_ID": 13,
-                    "start_time": 206,
-                    "end_time": 209,
-                    "label": 1,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 113,
-                    "clip_ID": 14,
-                    "start_time": 344,
-                    "end_time": 347,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "XWNDVDr7f_E": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 114,
-                    "clip_ID": 15,
-                    "start_time": 157,
-                    "end_time": 161,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 115,
-                    "clip_ID": 16,
-                    "start_time": 312,
-                    "end_time": 315,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                }
-            ]
-        },
         "jjhxXPO9MZs": {
             "video_resolution": 1080,
             "penalties": [
                 {
-                    "global_clip_ID": 116,
-                    "clip_ID": 17,
-                    "start_time": 20,
-                    "end_time": 24,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 117,
-                    "clip_ID": 18,
-                    "start_time": 44,
-                    "end_time": 48,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 118,
-                    "clip_ID": 19,
-                    "start_time": 72,
-                    "end_time": 75,
-                    "label": 1,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 119,
-                    "clip_ID": 20,
-                    "start_time": 91,
-                    "end_time": 93,
+                    "global_clip_ID": 1,
+                    "clip_ID": 0,
+                    "start_time": 332,
+                    "end_time": 335,
                     "label": 1,
                     "camera_shot": 0,
                     "flags": {
@@ -413,75 +76,15 @@
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": false
-                    }
-                }
-            ]
-        },
-        "m2qrIxck5vM": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 120,
-                    "clip_ID": 21,
-                    "start_time": 15,
-                    "end_time": 18,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
+                        "isSeperable": true
                     }
                 },
                 {
-                    "global_clip_ID": 121,
-                    "clip_ID": 22,
-                    "start_time": 29,
-                    "end_time": 31,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                }
-            ]
-        },
-        "xSti2ryY-hM": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 122,
-                    "clip_ID": 23,
-                    "start_time": 31,
-                    "end_time": 34,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "snm2HcX1le4": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 123,
-                    "clip_ID": 24,
-                    "start_time": 35,
-                    "end_time": 42,
-                    "label": 0,
+                    "global_clip_ID": 2,
+                    "clip_ID": 1,
+                    "start_time": 404,
+                    "end_time": 408,
+                    "label": 1,
                     "camera_shot": 0,
                     "flags": {
                         "middle_rink": true,
@@ -493,641 +96,146 @@
                 }
             ]
         },
-        "Y1i06JBYm6Q": {
+        "LaMTJz_03t4": {
             "video_resolution": 720,
             "penalties": [
                 {
-                    "global_clip_ID": 124,
-                    "clip_ID": 25,
-                    "start_time": 46,
-                    "end_time": 48,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 141,
-                    "clip_ID": 42,
-                    "start_time": 40,
-                    "end_time": 43,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "yeKw9CH0FTE": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 125,
-                    "clip_ID": 26,
-                    "start_time": 8,
-                    "end_time": 9,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": true,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "ggv8awwZXWY": {
-            "video_resolution": 480,
-            "penalties": [
-                {
-                    "global_clip_ID": 126,
-                    "clip_ID": 27,
-                    "start_time": 55,
-                    "end_time": 57,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 127,
-                    "clip_ID": 28,
-                    "start_time": 61,
-                    "end_time": 63,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 128,
-                    "clip_ID": 29,
-                    "start_time": 173,
-                    "end_time": 175,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 129,
-                    "clip_ID": 30,
-                    "start_time": 290,
-                    "end_time": 294,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 130,
-                    "clip_ID": 31,
-                    "start_time": 349,
-                    "end_time": 351,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 131,
-                    "clip_ID": 32,
-                    "start_time": 388,
-                    "end_time": 392,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "9MJyWhkK9vw": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 132,
-                    "clip_ID": 33,
-                    "start_time": 66,
-                    "end_time": 71,
-                    "label": 2,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 133,
-                    "clip_ID": 34,
-                    "start_time": 127,
-                    "end_time": 130,
-                    "label": 2,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 134,
-                    "clip_ID": 35,
-                    "start_time": 146,
-                    "end_time": 149,
-                    "label": 2,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 135,
-                    "clip_ID": 36,
-                    "start_time": 150,
-                    "end_time": 152,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 136,
-                    "clip_ID": 37,
-                    "start_time": 162,
-                    "end_time": 169,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "UIFAriIHBXQ": {
-            "video_resolution": 1440,
-            "penalties": [
-                {
-                    "global_clip_ID": 137,
-                    "clip_ID": 38,
-                    "start_time": 55,
-                    "end_time": 64,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 138,
-                    "clip_ID": 39,
-                    "start_time": 299,
-                    "end_time": 302,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 139,
-                    "clip_ID": 40,
-                    "start_time": 305,
-                    "end_time": 310,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 140,
-                    "clip_ID": 41,
-                    "start_time": 312,
-                    "end_time": 317,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "4vjQeHDl4z0": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 142,
-                    "clip_ID": 43,
-                    "start_time": 35,
-                    "end_time": 39,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "vQZIn0tURSs": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 143,
-                    "clip_ID": 44,
-                    "start_time": 95,
-                    "end_time": 97,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "bVTaEmIvHU4": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 144,
-                    "clip_ID": 45,
-                    "start_time": 24,
-                    "end_time": 28,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "FVf6LtnBATA": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 145,
-                    "clip_ID": 46,
-                    "start_time": 235,
-                    "end_time": 239,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                }
-            ]
-        },
-        "t85RGd-WFQ8": {
-            "video_resolution": 1080,
-            "penalties": [
-                {
-                    "global_clip_ID": 146,
-                    "clip_ID": 47,
-                    "start_time": 212,
-                    "end_time": 215,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 147,
-                    "clip_ID": 48,
-                    "start_time": 260,
-                    "end_time": 265,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 148,
-                    "clip_ID": 49,
-                    "start_time": 321,
-                    "end_time": 326,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 149,
-                    "clip_ID": 50,
-                    "start_time": 401,
-                    "end_time": 406,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "28fiV23XCEM": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 150,
-                    "clip_ID": 51,
-                    "start_time": 83,
-                    "end_time": 86,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": true,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 151,
-                    "clip_ID": 52,
-                    "start_time": 192,
-                    "end_time": 194,
-                    "label": 2,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": true,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 152,
-                    "clip_ID": 53,
-                    "start_time": 475,
-                    "end_time": 486,
-                    "label": 2,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": true,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "FqrMeXTuz7U": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 153,
-                    "clip_ID": 54,
-                    "start_time": 25,
-                    "end_time": 28,
-                    "label": 2,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 154,
-                    "clip_ID": 55,
-                    "start_time": 29,
-                    "end_time": 34,
-                    "label": 2,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 155,
-                    "clip_ID": 56,
-                    "start_time": 490,
-                    "end_time": 492,
-                    "label": 2,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "T3IfK2I7SOg": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 156,
-                    "clip_ID": 57,
-                    "start_time": 4677,
-                    "end_time": 4680,
+                    "global_clip_ID": 3,
+                    "clip_ID": 2,
+                    "start_time": 27,
+                    "end_time": 30,
                     "label": 1,
                     "camera_shot": 0,
                     "flags": {
                         "middle_rink": true,
                         "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 157,
-                    "clip_ID": 58,
-                    "start_time": 4683,
-                    "end_time": 4686,
-                    "label": 1,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": true,
+                        "two_players": false,
                         "has_caption": false,
                         "isSeperable": true
                     }
                 }
             ]
         },
-        "oiktx2eLSCs": {
+        "qtjU_svOLIg": {
             "video_resolution": 720,
             "penalties": [
                 {
-                    "global_clip_ID": 158,
-                    "clip_ID": 59,
-                    "start_time": 5693,
-                    "end_time": 5698,
-                    "label": 0,
-                    "camera_shot": 0,
+                    "global_clip_ID": 4,
+                    "clip_ID": 3,
+                    "start_time": 6063,
+                    "end_time": 6066,
+                    "label": 2,
+                    "camera_shot": 2,
+                    "flags": {
+                        "middle_rink": true,
+                        "has_fighting": false,
+                        "two_players": false,
+                        "has_caption": false,
+                        "isSeperable": true
+                    }
+                },
+                {
+                    "global_clip_ID": 5,
+                    "clip_ID": 4,
+                    "start_time": 6070,
+                    "end_time": 6073,
+                    "label": 2,
+                    "camera_shot": 2,
+                    "flags": {
+                        "middle_rink": true,
+                        "has_fighting": false,
+                        "two_players": false,
+                        "has_caption": false,
+                        "isSeperable": true
+                    }
+                }
+            ]
+        },
+        "_8kcjqCh65k": {
+            "video_resolution": 720,
+            "penalties": [
+                {
+                    "global_clip_ID": 6,
+                    "clip_ID": 5,
+                    "start_time": 7059,
+                    "end_time": 7061,
+                    "label": 2,
+                    "camera_shot": 2,
                     "flags": {
                         "middle_rink": false,
                         "has_fighting": false,
-                        "two_players": true,
+                        "two_players": false,
                         "has_caption": false,
                         "isSeperable": true
                     }
-                }
-            ]
-        },
-        "sbFMpQKR4Io": {
-            "video_resolution": 720,
-            "penalties": [
+                },
                 {
-                    "global_clip_ID": 159,
-                    "clip_ID": 60,
-                    "start_time": 3043,
-                    "end_time": 3045,
-                    "label": 0,
-                    "camera_shot": 1,
+                    "global_clip_ID": 7,
+                    "clip_ID": 6,
+                    "start_time": 7161,
+                    "end_time": 7163,
+                    "label": 2,
+                    "camera_shot": 2,
                     "flags": {
-                        "middle_rink": true,
+                        "middle_rink": false,
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
-                        "isSeperable": false
+                        "isSeperable": true
                     }
                 },
                 {
-                    "global_clip_ID": 160,
-                    "clip_ID": 61,
-                    "start_time": 5156,
-                    "end_time": 5161,
-                    "label": 1,
-                    "camera_shot": 1,
+                    "global_clip_ID": 8,
+                    "clip_ID": 7,
+                    "start_time": 5663,
+                    "end_time": 5669,
+                    "label": 2,
+                    "camera_shot": 2,
                     "flags": {
-                        "middle_rink": true,
-                        "has_fighting": true,
+                        "middle_rink": false,
+                        "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,
                         "isSeperable": true
                     }
                 },
                 {
-                    "global_clip_ID": 161,
-                    "clip_ID": 62,
-                    "start_time": 5175,
-                    "end_time": 5179,
-                    "label": 1,
-                    "camera_shot": 0,
+                    "global_clip_ID": 9,
+                    "clip_ID": 8,
+                    "start_time": 5843,
+                    "end_time": 5845,
+                    "label": 2,
+                    "camera_shot": 2,
+                    "flags": {
+                        "middle_rink": false,
+                        "has_fighting": false,
+                        "two_players": false,
+                        "has_caption": false,
+                        "isSeperable": true
+                    }
+                },
+                {
+                    "global_clip_ID": 10,
+                    "clip_ID": 9,
+                    "start_time": 5846,
+                    "end_time": 5848,
+                    "label": 2,
+                    "camera_shot": 2,
+                    "flags": {
+                        "middle_rink": false,
+                        "has_fighting": false,
+                        "two_players": false,
+                        "has_caption": false,
+                        "isSeperable": true
+                    }
+                },
+                {
+                    "global_clip_ID": 11,
+                    "clip_ID": 10,
+                    "start_time": 5849,
+                    "end_time": 5851,
+                    "label": 2,
+                    "camera_shot": 2,
                     "flags": {
                         "middle_rink": false,
                         "has_fighting": false,
@@ -1142,66 +250,11 @@
             "video_resolution": 720,
             "penalties": [
                 {
-                    "global_clip_ID": 162,
-                    "clip_ID": 63,
-                    "start_time": 3612,
-                    "end_time": 3617,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                }
-            ]
-        },
-        "Iyocj75AmMI": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 163,
-                    "clip_ID": 64,
-                    "start_time": 3363,
-                    "end_time": 3368,
-                    "label": 1,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "pw39mLS6T64": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 164,
-                    "clip_ID": 65,
-                    "start_time": 2698,
-                    "end_time": 2705,
-                    "label": 0,
-                    "camera_shot": 1,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": false
-                    }
-                },
-                {
-                    "global_clip_ID": 165,
-                    "clip_ID": 66,
-                    "start_time": 6926,
-                    "end_time": 6929,
-                    "label": 0,
+                    "global_clip_ID": 12,
+                    "clip_ID": 11,
+                    "start_time": 923,
+                    "end_time": 925,
+                    "label": 2,
                     "camera_shot": 1,
                     "flags": {
                         "middle_rink": false,
@@ -1212,11 +265,56 @@
                     }
                 },
                 {
-                    "global_clip_ID": 166,
-                    "clip_ID": 67,
-                    "start_time": 8198,
-                    "end_time": 8201,
-                    "label": 0,
+                    "global_clip_ID": 13,
+                    "clip_ID": 12,
+                    "start_time": 1057,
+                    "end_time": 1059,
+                    "label": 2,
+                    "camera_shot": 1,
+                    "flags": {
+                        "middle_rink": false,
+                        "has_fighting": false,
+                        "two_players": false,
+                        "has_caption": false,
+                        "isSeperable": true
+                    }
+                },
+                {
+                    "global_clip_ID": 14,
+                    "clip_ID": 13,
+                    "start_time": 1401,
+                    "end_time": 1403,
+                    "label": 2,
+                    "camera_shot": 1,
+                    "flags": {
+                        "middle_rink": false,
+                        "has_fighting": false,
+                        "two_players": false,
+                        "has_caption": false,
+                        "isSeperable": true
+                    }
+                },
+                {
+                    "global_clip_ID": 15,
+                    "clip_ID": 14,
+                    "start_time": 1405,
+                    "end_time": 1407,
+                    "label": 2,
+                    "camera_shot": 1,
+                    "flags": {
+                        "middle_rink": false,
+                        "has_fighting": false,
+                        "two_players": false,
+                        "has_caption": false,
+                        "isSeperable": true
+                    }
+                },
+                {
+                    "global_clip_ID": 16,
+                    "clip_ID": 15,
+                    "start_time": 2640,
+                    "end_time": 2644,
+                    "label": 2,
                     "camera_shot": 1,
                     "flags": {
                         "middle_rink": false,
@@ -1228,88 +326,18 @@
                 }
             ]
         },
-        "GyXwqy7DO0I": {
+        "JFpRmBgP5Fs": {
             "video_resolution": 720,
             "penalties": [
                 {
-                    "global_clip_ID": 167,
-                    "clip_ID": 68,
-                    "start_time": 3845,
-                    "end_time": 3849,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": true,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 168,
-                    "clip_ID": 69,
-                    "start_time": 3851,
-                    "end_time": 3857,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "qrIioG0gid8": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 169,
-                    "clip_ID": 70,
-                    "start_time": 5691,
-                    "end_time": 5694,
-                    "label": 0,
+                    "global_clip_ID": 17,
+                    "clip_ID": 16,
+                    "start_time": 3950,
+                    "end_time": 3953,
+                    "label": 2,
                     "camera_shot": 1,
                     "flags": {
                         "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                },
-                {
-                    "global_clip_ID": 170,
-                    "clip_ID": 71,
-                    "start_time": 5699,
-                    "end_time": 5702,
-                    "label": 0,
-                    "camera_shot": 2,
-                    "flags": {
-                        "middle_rink": false,
-                        "has_fighting": false,
-                        "two_players": false,
-                        "has_caption": false,
-                        "isSeperable": true
-                    }
-                }
-            ]
-        },
-        "O43lshtQgWI": {
-            "video_resolution": 720,
-            "penalties": [
-                {
-                    "global_clip_ID": 171,
-                    "clip_ID": 72,
-                    "start_time": 1359,
-                    "end_time": 1363,
-                    "label": 0,
-                    "camera_shot": 0,
-                    "flags": {
-                        "middle_rink": true,
                         "has_fighting": false,
                         "two_players": false,
                         "has_caption": false,

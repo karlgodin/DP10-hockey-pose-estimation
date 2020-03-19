@@ -165,6 +165,15 @@ class PHYTDataset(torch.utils.data.Dataset):
                     outputlabel = json.load(f)
                 self.y.append(torch.tensor(outputlabel['penaltyOnly'], dtype=torch.float32))
         
+        #Display count of data
+        disp = [0 for i in range(len(self.y[0]))]
+        for y in self.y:
+            disp[list(map(lambda x: int(x),y.numpy().tolist())).index(1)] += 1
+        for name, num in zip(outputlabel['Definitions']['penaltyOnly'],disp):
+            print('For label %s'%name)
+            print('\t... %d clips.'%num)
+        print('Total number of clips:',sum(disp))
+        
         global kFoldGenerator
         if(kFoldGenerator is None):
             kFoldGenerator = generatorKFold(len(self.clips), k=hparams.kfold)

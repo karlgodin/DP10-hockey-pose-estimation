@@ -147,9 +147,7 @@ class PHYTDataset(torch.utils.data.Dataset):
             for file in filenames:
                 if(file.endswith('.json')):
                     inputFiles.append(os.path.join(dirpath, file))
-                    
-                if(file == 'label.out'):
-                    outputFiles.append(os.path.join(dirpath, file))
+                    outputFiles.append(dirpath + '/label.out')
                     
         self.clips = []
         self.y = []

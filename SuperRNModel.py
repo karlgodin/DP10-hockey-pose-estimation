@@ -185,7 +185,6 @@ class SuperRNModel(pl.LightningModule):
         y_hat_rounded = torch.where(y_hat == torch.max(y_hat),ones,zeros)
         
         accu = torch.equal(y_hat_rounded,y)
-        print(y_hat,y_hat_rounded,y,accu)
         return {'val_accu': accu}
     
     def validation_epoch_end(self, outputs):

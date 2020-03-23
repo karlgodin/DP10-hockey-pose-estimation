@@ -179,9 +179,8 @@ class SuperRNModel(pl.LightningModule):
         x,y = batch
         y = y.cuda() if self.hparams.full_gpu else y
         y_hat = self.forward(x)
-        tensor_size = y_hat.shape[0]
-        ones = torch.ones(1,tensor_size).cuda() if self.hparams.full_gpu else torch.ones(1,tensor_size) 
-        zeros = torch.zeros(1,tensor_size).cuda() if self.hparams.full_gpu else torch.zeros(1,tensor_size)        
+        ones = torch.ones(y.shape[0],y.shape[1]).cuda() if self.hparams.full_gpu else torch.ones(y.shape[0],y.shape[1])
+        zeros = torch.zeros(y.shape[0],y.shape[1]).cuda() if self.hparams.full_gpu else torch.zeros(y.shape[0],y.shape[1])
         y_hat_rounded = torch.where(y_hat == torch.max(y_hat),ones,zeros)
         
         accu = torch.equal(y_hat_rounded,y)

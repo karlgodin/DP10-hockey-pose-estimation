@@ -235,16 +235,16 @@ if __name__ == '__main__':
         trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=False, checkpoint_callback=None)
         trainer.fit(rnModel)
         
+        
+        result = max(rnModel.valResults)
+        accuList.append(result)
         if(earlyBreak):
             break
         if(hyperparams.kfold > 1):            
-            result = max(rnModel.valResults)
-            accuList.append(result)
             print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),result)
 
     print('Done!')
-    
-    if(hyperparams.kfold > 1):
+    if(len(accuList) > 0):
         print('Global Accuracy:',sum(accuList)/len(accuList))
 
         

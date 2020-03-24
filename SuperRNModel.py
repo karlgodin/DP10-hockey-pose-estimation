@@ -240,7 +240,7 @@ if __name__ == '__main__':
         accuList.append(result)
         if(earlyBreak):
             break
-        if(hyperparams.kfold > 1):            
+        else:           
             print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),result)
 
     print('Done!')

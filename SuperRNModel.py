@@ -34,7 +34,7 @@ def add_model_specific_args(parent_parser, root_dir):
 
     # training params (opt)
     parser.add_argument('--patience', default=4, type=int)
-    parser.add_argument('--kfold', default=1, type=int)
+    parser.add_argument('--kfold', default=10, type=int)
     parser.add_argument('--epochs', default=10, type=int)
     parser.add_argument('--optim', default='Adam', type=str)
     parser.add_argument('--lr', default=0.0001, type=float)

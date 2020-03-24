@@ -34,7 +34,7 @@ def add_model_specific_args(parent_parser, root_dir):
 
     # training params (opt)
     parser.add_argument('--patience', default=4, type=int)
-    parser.add_argument('--kfold', default=10, type=int)
+    parser.add_argument('--kfold', default=1, type=int)
     parser.add_argument('--epochs', default=10, type=int)
     parser.add_argument('--optim', default='Adam', type=str)
     parser.add_argument('--lr', default=0.0001, type=float)
@@ -211,6 +211,11 @@ if __name__ == '__main__':
         raise noTypeSelected("Must select at least one: --inter, --intra")
             
     accuList = []
+    earlyBreak = False
+    if(hyperparams.kfold == 1):
+        hyperparams.kfold = 10
+        earlyBreak = True
+        
     classifier.dataset.KFoldLength = hyperparams.kfold
     for i in range(classifier.dataset.KFoldLength):
         #Set Seeds
@@ -228,9 +233,10 @@ if __name__ == '__main__':
         )
 
         trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=False, checkpoint_callback=None)
-
-
         trainer.fit(rnModel)
+        
+        if(earlyBreak):
+            break
         if(hyperparams.kfold > 1):            
             result = max(rnModel.valResults)
             accuList.append(result)

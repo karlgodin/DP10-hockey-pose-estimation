@@ -7,7 +7,7 @@ def getGridSearch(optimizer):
     set = ['inter', 'intra']
     patience = [10, 25, 50]
     kfold = [5, 10, 15]
-    epochs = [1]
+    epochs = [300]
     optim = [optimizer]
     lr = [0.0001, 0.00001, 0.000001]
     batch_size = [1, 2, 4, 8, 16]

@@ -232,7 +232,7 @@ if __name__ == '__main__':
 
         trainer.fit(rnModel)
         if(hyperparams.kfold > 1):            
-            result = max(rnModel.valResults[5:])
+            result = max(rnModel.valResults)
             accuList.append(result)
             print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),result)
 

@@ -202,6 +202,7 @@ if __name__ == '__main__':
     # allow model to overwrite or extend args
     parser = add_model_specific_args(parent_parser, root_dir)
     hyperparams = parser.parse_args()
+    print(hyperparams)
     
     #Check to see if inter or intra or inter+intra
     if(not hyperparams.inter and not hyperparams.intra):

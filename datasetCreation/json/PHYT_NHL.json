@@ -21,22 +21,22 @@
             },
             "No Penalty": {
                 "twoPlayers": 2,
-                "seperable": 19,
-                "HD": 11,
+                "seperable": 20,
+                "HD": 12,
                 "middleOfRink": 21,
-                "twoPlayersOrSeperable": 19,
+                "twoPlayersOrSeperable": 20,
                 "twoPlayersOrSeperableAndHDAndMiddle": 7,
-                "numOfClips": 25
+                "numOfClips": 26
             }
         },
         "statisticsDataset": {
             "twoPlayers": 5,
-            "seperable": 56,
-            "HD": 13,
+            "seperable": 57,
+            "HD": 14,
             "middleOfRink": 65,
-            "twoPlayersOrSeperable": 56,
+            "twoPlayersOrSeperable": 57,
             "twoPlayersOrSeperableAndHDAndMiddle": 8,
-            "numOfClips": 99,
+            "numOfClips": 100,
             "YoutubeVideos": {
                 "items": [
                     "zdi4HuBV8Ls",
@@ -78,9 +78,10 @@
                     "-BS-5ZfJDsc",
                     "-EoCcJvBbvY",
                     "E3dVscdK-ZY",
-                    "FFbBWsxnXe4"
+                    "FFbBWsxnXe4",
+                    "ENaFSV_HjOI"
                 ],
-                "count": 40
+                "count": 41
             }
         }
     },
@@ -1770,6 +1771,26 @@
                     "end_time": 3178,
                     "label": 2,
                     "camera_shot": 0,
+                    "flags": {
+                        "middle_rink": false,
+                        "has_fighting": false,
+                        "two_players": false,
+                        "has_caption": false,
+                        "isSeperable": true
+                    }
+                }
+            ]
+        },
+        "ENaFSV_HjOI": {
+            "video_resolution": 720,
+            "penalties": [
+                {
+                    "global_clip_ID": 99,
+                    "clip_ID": 99,
+                    "start_time": 61,
+                    "end_time": 63,
+                    "label": 2,
+                    "camera_shot": 2,
                     "flags": {
                         "middle_rink": false,
                         "has_fighting": false,

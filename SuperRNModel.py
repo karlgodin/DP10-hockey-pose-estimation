@@ -14,9 +14,14 @@ import torch.nn as nn
 import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.logging import TestTubeLogger
+
 
 import numpy as np
 import math
+
+
 
 def accuracy(y_pred, y):
     correct = (y == y_pred).sum().float()
@@ -24,7 +29,6 @@ def accuracy(y_pred, y):
     return acc
 
 
-from pytorch_lightning.callbacks import EarlyStopping
 
 def add_model_specific_args(parent_parser, root_dir):
     parser = ArgumentParser(parents=[parent_parser])
@@ -46,6 +50,7 @@ def add_model_specific_args(parent_parser, root_dir):
     parser.add_argument('--inter', action='store_true')
     parser.add_argument('--intra', action='store_true')
     parser.add_argument('--dataset', default='PHYT', type=str)
+    parser.add_argument('--resume_from_checkpoint', default=None, type=str)
     return parser
 
 
@@ -184,26 +189,36 @@ class SuperRNModel(pl.LightningModule):
         y_hat_rounded = torch.where(y_hat == torch.max(y_hat),ones,zeros)
         
         accu = torch.equal(y_hat_rounded,y)
-        return {'val_accu': accu}
-    
+        loss = self.criterion(y_hat.squeeze(), y.squeeze())
+        tensorboard_logs = {'val_loss': loss}
+        return {'val_loss': loss, 'val_accu': accu, 'log': tensorboard_logs}
+
     def validation_epoch_end(self, outputs):
         avg_accu = [x['val_accu'] for x in outputs]
         avg_accu = sum(avg_accu)/len(avg_accu)
+
+        avg_loss = [x['val_loss'] for x in outputs]
+        avg_loss = sum(avg_loss) / len(avg_loss)
+
         self.valResults.append(avg_accu)
         print('\nAccuracy:',avg_accu)
-        return {'val_accu': avg_accu}
+        tensorboard_logs = {'val_loss': avg_loss}
+
+        return {'val_accu': avg_accu, 'val_loss': avg_loss, 'log': tensorboard_logs}
 
 if __name__ == '__main__':
     # use default args given by lightning
     root_dir = os.path.split(os.path.dirname(sys.modules['__main__'].__file__))[0]
     parent_parser = ArgumentParser(add_help=False)
-
+    version = None
     
     # allow model to overwrite or extend args
     parser = add_model_specific_args(parent_parser, root_dir)
     hyperparams = parser.parse_args()
     print(hyperparams)
-    
+
+    resume_from_checkpoint = hyperparams.resume_from_checkpoint
+
     #Check to see if inter or intra or inter+intra
     if(not hyperparams.inter and not hyperparams.intra):
         class noTypeSelected(Exception):
@@ -225,17 +240,41 @@ if __name__ == '__main__':
             
         rnModel = SuperRNModel(hyperparams)
 
+        if version:
+            tt_logger = TestTubeLogger(
+                save_dir="lightning_logs",
+                name="rel_net",
+                debug=False,
+                create_git_tag=False,
+                version=version
+            )
+        else:
+            tt_logger = TestTubeLogger(
+                save_dir="lightning_logs",
+                name="rel_net",
+                debug=False,
+                create_git_tag=False
+            )
+
         early_stop_callback = EarlyStopping(
-            monitor='val_accu',
+            monitor='val_loss',
             min_delta=0.01,
             patience=hyperparams.patience,
             verbose=False,
-            mode='max'
+            mode='min'
         )
 
-        trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=False, checkpoint_callback=None)
+        checkpoint_callback = ModelCheckpoint(
+            filepath=f'lightning_logs/{tt_logger.name}/version_{tt_logger.experiment.version}/checkpoints',
+            verbose=False,
+            monitor='val_loss',
+            mode='min',
+            prefix=''
+        )
+
+        trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=early_stop_callback, checkpoint_callback=checkpoint_callback, logger=tt_logger, resume_from_checkpoint=resume_from_checkpoint)
         trainer.fit(rnModel)
-        
+
         
         result = max(rnModel.valResults)
         accuList.append(result)
@@ -245,6 +284,9 @@ if __name__ == '__main__':
             print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),result)
 
     print('Done!')
+
+
+
     if(len(accuList) > 0):
         print('Global Accuracy:',sum(accuList)/len(accuList))
 

@@ -241,7 +241,7 @@ if __name__ == '__main__':
 
         if version:
             tt_logger = TestTubeLogger(
-                save_dir="lightning_logs",
+                save_dir="../drive/My Drive/DesignProject/lightning_logs",
                 name="rel_net",
                 debug=False,
                 create_git_tag=False,
@@ -249,7 +249,7 @@ if __name__ == '__main__':
             )
         else:
             tt_logger = TestTubeLogger(
-                save_dir="lightning_logs",
+                save_dir="../drive/My Drive/DesignProject/lightning_logs",
                 name="rel_net",
                 debug=False,
                 create_git_tag=False
@@ -264,7 +264,7 @@ if __name__ == '__main__':
         )
 
         checkpoint_callback = ModelCheckpoint(
-            filepath=f'lightning_logs/{tt_logger.name}/version_{tt_logger.experiment.version}/checkpoints',
+            filepath=f'../drive/My Drive/DesignProject/lightning_logs/{tt_logger.name}/version_{tt_logger.experiment.version}/checkpoints',
             verbose=False,
             monitor='val_loss',
             mode='min',

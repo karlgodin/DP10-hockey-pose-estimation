@@ -23,6 +23,9 @@ for cmd in cmds[done:]:
     print(cmd)
     subprocess.call(cmd,shell=True)
     
+    if(not os.path.exists('GridSearchDONEs')):
+        os.mkdir('GridSearchDONEs')
+        
     with open(DONEPath,'w') as f:
         f.write(str(done))
     done+=1

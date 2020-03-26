@@ -8,7 +8,7 @@ def getGridSearch():
     kfold = [5, 10]
     epochs = [300]
     lr = [0.0001, 0.00001, 0.000001]
-    batch_size = [4, 8, 16]
+    batch_size = [1,2,4, 8, 16]
     randomJointOrder = [10]
     momentum = [0.1]
     nesterov = [True, False]
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     random.shuffle(outCommandList)
     
     #Take only 30% of whole test
-    outCommandList = outCommandList[:int(len(outCommandList)*0.3)]
+    outCommandList = outCommandList[:int(len(outCommandList)*0.5)]
  
     #Write files for each team members
     members = ['Karl','Marine','Shawn']

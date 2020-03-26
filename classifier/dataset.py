@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import json
 import pathlib
+import itertools
 
 
 from sklearn.model_selection import KFold
@@ -15,6 +16,91 @@ kFoldGenerator = None
 KFoldLength = 1
 
 target_frame_amount = 15
+
+
+# have the pairs of joints together to feed in the network
+def get_combinations_inter(perps: torch.FloatTensor, victims: torch.FloatTensor):
+    num_distances = int((perps.size()[2] - 1) / 3)
+
+    outputs = torch.empty(perps.size()[0], perps.size()[1] * perps.size()[1],
+                          perps.size()[2] * 2 + 2 * num_distances - 1)
+
+    for count, perp in enumerate(perps):
+        victim = victims[count]
+        sizeOfPerp = perp.size()
+        nb_position_input = sizeOfPerp[1]
+        array_body_index = np.arange(sizeOfPerp[0])
+        nb_frames = int((nb_position_input - 1) / 3)
+
+        values = itertools.product(array_body_index, repeat=2)
+        nb_players = 2
+        # TODO transform this into good comment that describes size of data: sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
+        output = []
+        for x in values:
+            joint1 = perp[x[0]]
+            joint2 = victim[x[1]]
+
+            x_1 = joint1[::3]
+            x_1 = x_1[:-1]
+            x_2 = joint2[::3]
+            x_2 = x_2[:-1]
+
+            y_1 = joint1[1::3]
+            y_2 = joint2[1::3]
+
+            distances = torch.sqrt((x_1 - x_2) ** 2 + (y_1 - y_2) ** 2)
+
+            motions = torch.sqrt((x_1[:-1] - x_2[1:]) ** 2 + (y_1[:-1] - y_2[1:]) ** 2)
+
+            # put on the same row for the matrix: joint1, joint2, distances, motions
+            iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
+            output.append(iteration1)
+
+        output = torch.stack(output, dim=0)
+        outputs[count] = output
+    return outputs
+
+
+def get_combinations_intra(p1: torch.FloatTensor):
+    num_distances = int((p1.size()[2] - 1) / 3)
+
+    outputs = torch.empty(p1.size()[0], int((p1.size()[1] * p1.size()[1] - p1.size()[1])/2),
+                          p1.size()[2] * 2 + 2 * num_distances - 1)
+
+    for count, player1 in enumerate(p1):
+        sizeOfPlayer1 = player1.size()
+        nb_position_input = sizeOfPlayer1[1]
+        array_body_index = np.arange(sizeOfPlayer1[0])
+        nb_frames = int((nb_position_input - 1) / 3)
+
+        values = itertools.combinations(array_body_index, 2)
+        nb_players = 2
+        # TODO transform this into good comment that describes size of data: sizeOfData = nb_frames * 3 * nb_players + nb_frames + (nb_frames - 1) + nb_players
+        output = []
+        for x in values:
+            joint1 = player1[x[0]]
+            joint2 = player1[x[1]]
+
+            x_1 = joint1[::3]
+            x_1 = x_1[:-1]
+            x_2 = joint2[::3]
+            x_2 = x_2[:-1]
+
+            y_1 = joint1[1::3]
+            y_2 = joint2[1::3]
+
+            distances = torch.sqrt((x_1 - x_2) ** 2 + (y_1 - y_2) ** 2)
+
+            motions = torch.sqrt((x_1[:-1] - x_2[1:]) ** 2 + (y_1[:-1] - y_2[1:]) ** 2)
+
+            # put on the same row for the matrix: joint1, joint2, distances, motions
+            iteration1 = torch.cat([joint1, joint2, distances, motions], dim=0)
+            output.append(iteration1)
+
+        output = torch.stack(output, dim=0)
+        outputs[count] = output
+    return outputs
+
 
 def generatorKFold(sizeOfElem,k=KFoldLength):
     indexes = [i for i in range(sizeOfElem)]
@@ -142,6 +228,8 @@ class PHYTDataset(torch.utils.data.Dataset):
     def __init__(self, clips_folder: str, hparams,TwoClasses = True,transform=None, cuda=False):
         self.cuda = cuda
         self.hparams = hparams
+        self.isInter = self.hparams.inter and not self.hparams.intra
+        self.isIntra = not self.hparams.inter and self.hparams.intra
         with open(str(pathlib.Path(__file__).parent.absolute())+'/sets.json') as f:
             sets = json.load(f)
         
@@ -154,6 +242,7 @@ class PHYTDataset(torch.utils.data.Dataset):
                     
         self.clips = []
         self.y = []
+        tempLabels = []
         
         for input_name,output_name in zip(inputFiles,outputFiles):
             perp, victim = parse_PHYT_clip(input_name)            
@@ -164,6 +253,7 @@ class PHYTDataset(torch.utils.data.Dataset):
                 with open(output_name, 'r') as f:
                     outputlabel = json.load(f)
                 outputLabel = outputlabel['penaltyOnly']
+                tempLabels.append(outputLabel)
                 
                 #Go from 3 classes to 2 classes
                 if(TwoClasses):
@@ -174,9 +264,9 @@ class PHYTDataset(torch.utils.data.Dataset):
                 self.y.append(torch.tensor(outputLabel, dtype=torch.float32))
         
         #Display count of data
-        disp = [0 for i in range(len(self.y[0]))]
-        for y in self.y:
-            disp[list(map(lambda x: int(x),y.numpy().tolist())).index(1)] += 1
+        disp = [0 for i in range(len(tempLabels[0]))]
+        for y in tempLabels:
+            disp[list(map(lambda x: int(x),y)).index(1)] += 1
         for name, num in zip(outputlabel['Definitions']['penaltyOnly'],disp):
             print('For label %s'%name)
             print('\t... %d clips.'%num)
@@ -227,7 +317,34 @@ class PHYTDataset(torch.utils.data.Dataset):
                         
                         clipList.append(np.concatenate((p1, p2)))
                         labelList.append(label)
-                        
+
+        self.numOfFrames = (len(self.clips[0][0])-1)//3
+        self.numOfJoints = len(self.clips[0])//2
+
+        #Apply get combinations
+        for clipList, labelList in zip([self.clips,self.valclips],[self.y,self.valy]):
+          for clipIdx in range(len(clipList)):
+              clips = clipList[clipIdx]
+              if(self.hparams.full_gpu):
+                labelList[clipIdx] = labelList[clipIdx].cuda()
+              p1 = torch.FloatTensor(clips[:int(clips.shape[0]/2),:]).unsqueeze(0)
+              p2 = torch.FloatTensor(clips[int(clips.shape[0]/2):,:]).unsqueeze(0)
+              
+              if(self.isInter):
+                input_data_clip_combinations = get_combinations_inter(p1, p2)
+
+                if(self.hparams.full_gpu):
+                    input_data_clip_combinations = input_data_clip_combinations.cuda()
+                clipList[clipIdx] = input_data_clip_combinations.squeeze(0)
+              
+              if(self.isIntra):
+                input_data_clip_combinations_P1 = get_combinations_intra(p1)
+                input_data_clip_combinations_P2 = get_combinations_intra(p2)
+                
+                if(self.hparams.full_gpu):
+                    input_data_clip_combinations_P1 = input_data_clip_combinations_P1.cuda()
+                    input_data_clip_combinations_P2 = input_data_clip_combinations_P2.cuda()
+                clipList[clipIdx] = (input_data_clip_combinations_P1.squeeze(0),input_data_clip_combinations_P2.squeeze(0))
 
     def __len__(self):
         return len(self.clips)
@@ -239,6 +356,9 @@ class PHYTDataset(torch.utils.data.Dataset):
 class SBUDataset(torch.utils.data.Dataset):
     def __init__(self, SBU_data_folder: str, hparams, cuda=False, ):
         self.cuda = cuda
+        self.hparams = hparams
+        self.isInter = self.hparams.inter and not self.hparams.intra
+        self.isIntra = not self.hparams.inter and self.hparams.intra
 
         files = []
         for (dirpath, dirnames, filenames) in os.walk(SBU_data_folder):
@@ -263,6 +383,34 @@ class SBUDataset(torch.utils.data.Dataset):
         self.clips = [self.clips[i] for i in train_index]
         self.valy = [self.y[i] for i in test_index]
         self.y = [self.y[i] for i in train_index]
+
+        self.numOfFrames = (len(self.clips[0][0])-1)//3
+        self.numOfJoints = len(self.clips[0])//2
+
+        #Apply get combinations
+        for clipList, labelList in zip([self.clips,self.valclips],[self.y,self.valy]):
+          for clipIdx in range(len(clipList)):
+              clips = clipList[clipIdx]
+              if(self.hparams.full_gpu):
+                labelList[clipIdx] = labelList[clipIdx].cuda()
+              p1 = torch.FloatTensor(clips[:int(clips.shape[0]/2),:]).unsqueeze(0)
+              p2 = torch.FloatTensor(clips[int(clips.shape[0]/2):,:]).unsqueeze(0)
+              
+              if(self.isInter):
+                input_data_clip_combinations = get_combinations_inter(p1, p2)
+
+                if(self.hparams.full_gpu):
+                    input_data_clip_combinations = input_data_clip_combinations.cuda()
+                clipList[clipIdx] = input_data_clip_combinations.squeeze(0)
+              
+              if(self.isIntra):
+                input_data_clip_combinations_P1 = get_combinations_intra(p1)
+                input_data_clip_combinations_P2 = get_combinations_intra(p2)
+                
+                if(self.hparams.full_gpu):
+                    input_data_clip_combinations_P1 = input_data_clip_combinations_P1.cuda()
+                    input_data_clip_combinations_P2 = input_data_clip_combinations_P2.cuda()
+                clipList[clipIdx] = (input_data_clip_combinations_P1.squeeze(0),input_data_clip_combinations_P2.squeeze(0))
 
     def __len__(self):
         return len(self.clips)

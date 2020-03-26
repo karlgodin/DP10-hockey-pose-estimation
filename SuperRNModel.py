@@ -2,7 +2,6 @@ import os, sys
 from argparse import ArgumentParser
 from classifier.joints import parse_clip
 
-from classifier.GTheta import get_combinations_inter, get_combinations_intra
 from classifier.GTheta import GTheta
 from classifier.FPhi import FPhi
 from classifier.dataset import PHYTDataset, generatorKFold, SBUDataset
@@ -62,20 +61,22 @@ class SuperRNModel(pl.LightningModule):
         self.isInter = self.hparams.inter and not self.hparams.intra
         self.isIntra = not self.hparams.inter and self.hparams.intra
 
-        self.ones = torch.ones(1,2).cuda() if self.hparams.full_gpu else torch.ones(1,2)
-        self.zeros = torch.zeros(1,2).cuda() if self.hparams.full_gpu else torch.zeros(1,2)
-
         print('We are using:',hparams.dataset)
         if hparams.dataset == "PHYT":
             self.criterion = nn.BCELoss()
             self.dataset = PHYTDataset('datasetCreation/FilteredPoses/',hparams)
+            self.ones = torch.ones(1,2).cuda() if self.hparams.full_gpu else torch.ones(1,2)
+            self.zeros = torch.zeros(1,2).cuda() if self.hparams.full_gpu else torch.zeros(1,2)
+            
         elif hparams.dataset == "SBU":
             self.criterion = nn.CrossEntropyLoss()
             self.dataset = SBUDataset('classifier/SBUDataset', hparams)
+            self.ones = torch.ones(1,8).cuda() if self.hparams.full_gpu else torch.ones(1,8)
+            self.zeros = torch.zeros(1,8).cuda() if self.hparams.full_gpu else torch.zeros(1,8)
 
         #Load dataset and find its size
-        numOfFrames = (len(self.dataset.clips[0][0])-1)//3
-        numOfJoints = len(self.dataset.clips[0])//2
+        numOfFrames = self.dataset.numOfFrames
+        numOfJoints = self.dataset.numOfJoints
         
         if(self.isInter):
             #Init Gmodel
@@ -93,16 +94,10 @@ class SuperRNModel(pl.LightningModule):
 
     def forward(self, x):
         # numpy matrix of all combination of inter joints
-
-        p1 = x[:,:int(x.shape[1]/2),:]
-        p2 = x[:,int(x.shape[1]/2):,:]
         
         if(self.isInter):
-            input_data_clip_combinations = get_combinations_inter(p1, p2)
-            
-            if(self.hparams.full_gpu):
-                input_data_clip_combinations = input_data_clip_combinations.cuda()
-            
+            input_data_clip_combinations = x
+                       
             tensor_g = self.g_model_inter(input_data_clip_combinations)
 
             # calculate sum and div
@@ -113,13 +108,9 @@ class SuperRNModel(pl.LightningModule):
             tensor_classification = self.f_model(average_output)
             
         if(self.isIntra):
-            input_data_clip_combinations_P1 = get_combinations_intra(p1)
-            input_data_clip_combinations_P2 = get_combinations_intra(p2)
-            
-            if(self.hparams.full_gpu):
-                input_data_clip_combinations_P1 = input_data_clip_combinations_P1.cuda()
-                input_data_clip_combinations_P2 = input_data_clip_combinations_P2.cuda()
-                
+            input_data_clip_combinations_P1 = x[0]
+            input_data_clip_combinations_P2 = x[1]
+                            
             tensor_g_P1 = self.g_model_intra(input_data_clip_combinations_P1)
             tensor_g_P2 = self.g_model_intra(input_data_clip_combinations_P2)
 
@@ -129,11 +120,11 @@ class SuperRNModel(pl.LightningModule):
                 average_output = average_output.cuda()
             
             for tensor_g in [tensor_g_P1,tensor_g_P1]:
-                sum = torch.sum(tensor_g, dim=1)
+                sumTensorG = torch.sum(tensor_g, dim=1)
                 size_output_G = tensor_g.shape[1]
-                average_output_temp = sum / size_output_G
+                average_output_temp = sumTensorG / size_output_G
                 average_output = torch.cat([average_output, average_output_temp], dim=1)
-                
+    
             tensor_classification = self.f_model(average_output)
         return tensor_classification
 
@@ -149,9 +140,6 @@ class SuperRNModel(pl.LightningModule):
     def training_step(self, batch, batch_nb):
         # REQUIRED
         x,y = batch
-        if self.hparams.full_gpu:
-            x = x.cuda()
-            y = y.cuda()
         y_hat = self.forward(x)
         if self.hparams.dataset == "PHYT":
             loss = self.criterion(y_hat.squeeze(), y.squeeze())
@@ -196,7 +184,11 @@ class SuperRNModel(pl.LightningModule):
 
         valAccuracy = sum(valAccuracy)/len(valAccuracy) if len(valAccuracy) != 0 else 0.0
 
-        loss = self.criterion(y_hat.squeeze(), y.squeeze())
+        if(self.hparams.dataset == 'PHYT'):
+          loss = self.criterion(y_hat.squeeze(), y.squeeze())
+        elif(self.hparams.dataset == 'SBU'):
+          _,labels = torch.max(y.squeeze(),1)
+          loss = self.criterion(y_hat.squeeze(),labels)
         tensorboard_logs = {'val_loss': loss}
         return {'val_loss': loss, 'val_accu': valAccuracy, 'log': tensorboard_logs}
 

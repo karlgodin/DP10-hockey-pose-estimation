@@ -16,7 +16,7 @@ class FPhi(pl.LightningModule):
         self.hparams = hparams
 
         if hparams.dataset == "PHYT":
-            final_layer_count = 3
+            final_layer_count = 2
         elif hparams.dataset == "SBU":
             final_layer_count = 8
 

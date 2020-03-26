@@ -3,6 +3,7 @@ import os
 import csv
 import numpy as np
 import json
+import pathlib
 
 
 from sklearn.model_selection import KFold
@@ -138,10 +139,12 @@ def get_joints(player_frames : np.ndarray, nb_joints):
 
 
 class PHYTDataset(torch.utils.data.Dataset):
-    def __init__(self, clips_folder: str, hparams,transform=None, cuda=False):
+    def __init__(self, clips_folder: str, hparams,TwoClasses = True,transform=None, cuda=False):
         self.cuda = cuda
         self.hparams = hparams
-
+        with open(str(pathlib.Path(__file__).parent.absolute())+'/sets.json') as f:
+            sets = json.load(f)
+        
         inputFiles, outputFiles = [], []
         for (dirpath, dirnames, filenames) in os.walk(clips_folder):
             for file in filenames:
@@ -151,7 +154,6 @@ class PHYTDataset(torch.utils.data.Dataset):
                     
         self.clips = []
         self.y = []
-
         
         for input_name,output_name in zip(inputFiles,outputFiles):
             perp, victim = parse_PHYT_clip(input_name)            
@@ -161,7 +163,15 @@ class PHYTDataset(torch.utils.data.Dataset):
                 #Get label
                 with open(output_name, 'r') as f:
                     outputlabel = json.load(f)
-                self.y.append(torch.tensor(outputlabel['penaltyOnly'], dtype=torch.float32))
+                outputLabel = outputlabel['penaltyOnly']
+                
+                #Go from 3 classes to 2 classes
+                if(TwoClasses):
+                    if(outputLabel[0] == 1 or outputLabel[1] == 1):
+                        outputLabel = [1,0]
+                    else:
+                        outputLabel = [0,1]
+                self.y.append(torch.tensor(outputLabel, dtype=torch.float32))
         
         #Display count of data
         disp = [0 for i in range(len(self.y[0]))]
@@ -172,6 +182,12 @@ class PHYTDataset(torch.utils.data.Dataset):
             print('\t... %d clips.'%num)
         print('Total number of clips:',sum(disp))
         
+        #Seperate test from train
+        self.testclips = [self.clips[i] for i in sets['test']]
+        self.testy = [self.y[i] for i in sets['test']]
+        self.clips = [self.clips[i] for i in sets['train']]
+        self.y = [self.y[i] for i in sets['train']]
+        
         global kFoldGenerator
         if(kFoldGenerator is None):
             kFoldGenerator = generatorKFold(len(self.clips), k=hparams.kfold)
@@ -181,6 +197,10 @@ class PHYTDataset(torch.utils.data.Dataset):
         self.valy = [self.y[i] for i in test_index]
         self.y = [self.y[i] for i in train_index]
         
+        #Print size of datasets
+        print('Size of Training Set:',len(self.clips))
+        print('Size of Validation Set:',len(self.valclips))
+        print('Size of Tests Set:',len(self.testclips))
         
         for clipList, labelList in zip([self.clips,self.valclips],[self.y,self.valy]):
             #Data Augmentation. Changing Perp and Victim Place

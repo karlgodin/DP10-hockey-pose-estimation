@@ -1,14 +1,12 @@
 import itertools as it
-import subprocess
 import sys
+import random
 
-def getGridSearch(optimizer):
-    my_dict = {}
+def getGridSearch():
     set = ['inter', 'intra']
     patience = [10, 25, 50]
     kfold = [5, 10, 15]
     epochs = [300]
-    optim = [optimizer]
     lr = [0.0001, 0.00001, 0.000001]
     batch_size = [1, 2, 4, 8, 16]
     randomJointOrder = [1, 5, 10]
@@ -17,42 +15,61 @@ def getGridSearch(optimizer):
 
     # always true for now
     changeOrder = ['true', 'false']
-
-    if optimizer == 'Adam':
-        my_dict = {'set': set, 'patience': patience, 'kfold': kfold, 'epochs': epochs, 'optim': optim, 'lr': lr, 'batch_size': batch_size, 'randomJointOrder': randomJointOrder}
-    elif optimizer == "SGD":
-        my_dict = {'set': set, 'patience': patience, 'kfold': kfold, 'epochs': epochs, 'optim': optim, 'lr': lr,
-                   'batch_size': batch_size, 'randomJointOrder': randomJointOrder, 'momentum': momentum, 'nesterov': nesterov}
-    combinations = it.product(*(my_dict[Name] for Name in my_dict))
+    
+    #optim = Adam
+    combinationsAdam = it.product(*(set,patience,kfold,epochs,['Adam'],lr,batch_size,randomJointOrder))
+    #optim = SGD
+    combinationsSGD = it.product(*(set,patience,kfold,epochs,['SGD'],lr,batch_size,randomJointOrder,momentum,nesterov))
+    
+    #concat lists
+    combinations = list(combinationsAdam) + list(combinationsSGD)
     return list(combinations)
 
 if __name__ == '__main__':
     combHyperparams = ''
-    argumentsPassed = sys.argv
-    default_cmd = "python SuperRNModel.py "
+    cmd_template = "python SuperRNModel.py "
     # knowing the order of the command, the forth argument (not counting python) will always be the optim
-    hyperparamsCombinationList = getGridSearch(str(argumentsPassed[2]))
-
-    # break the list of combinations to run fewer at a time
-    hyperparamsCombinationList = hyperparamsCombinationList[int(argumentsPassed[3]): int(argumentsPassed[4])]
+    hyperparamsCombinationList = getGridSearch()
 
     # loop over all possible combinations of hyperparameters
+    outCommandList = []
     for element in hyperparamsCombinationList:
-        if 'Adam' in argumentsPassed:
+        if 'Adam' == element[4]:
             combHyperparams = '--patience ' + str(element[1]) + ' --kfold ' + str(element[2]) + ' --epochs ' + str(element[3]) + ' --optim ' + str(element[4]) + ' --lr ' + str(element[5]) + ' --batch_size ' + str(element[6]) + ' --randomJointOrder ' + str(element[7])
-        elif 'SGD' in argumentsPassed:
+        elif 'SGD' in element[4]:
             combHyperparams = '--patience ' + str(element[1]) + ' --kfold ' + str(element[2]) + ' --epochs ' + str(
                 element[3]) + ' --optim ' + str(element[4]) + ' --lr ' + str(element[5]) + ' --batch_size ' + str(
                 element[6]) + ' --randomJointOrder ' + str(element[7]) + ' --momentum ' + str(element[8])
 
             if element[9] == True:
                 combHyperparams = combHyperparams + ' --nesterov'
-
-        if '--full_gpu' in argumentsPassed:
-            default_cmd = default_cmd + "--full_gpu "
+        else:
+            raise(Exception)
+        
+        default_cmd = cmd_template + "--full_gpu "
+        
         if element[0] == 'intra':
-            default_cmd = default_cmd + "--intra --changeOrder --dataset PHYT "
+            default_cmd = default_cmd + "--intra"
         elif element[0] == 'inter':
-            default_cmd = default_cmd + "--inter --changeOrder --dataset PHYT "
+            default_cmd = default_cmd + "--inter"
+            
+        default_cmd = default_cmd +  " --changeOrder --dataset PHYT "
         command = default_cmd + combHyperparams
-        subprocess.call(command, shell=True)
+        outCommandList.append(command)
+
+    random.seed(0) 
+    random.shuffle(outCommandList)
+    
+    #Take only 30% of whole test
+    outCommandList = outCommandList[:int(len(outCommandList)*0.3)]
+ 
+    #Write files for each team members
+    members = ['Karl','Marine','Shawn']
+    outCommandLists = [outCommandList[i::3] for i in range(len(members))]
+    
+    for member, commands in zip(members,outCommandLists):
+        with open('GridSearchTODOs/TODO_%s.txt'%member,'w') as f:
+            for cmd in commands:
+                f.write(cmd)
+                f.write('\n')
+        

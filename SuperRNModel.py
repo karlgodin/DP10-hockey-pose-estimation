@@ -215,7 +215,6 @@ if __name__ == '__main__':
     # allow model to overwrite or extend args
     parser = add_model_specific_args(parent_parser, root_dir)
     hyperparams = parser.parse_args()
-    print(hyperparams)
 
     resume_from_checkpoint = hyperparams.resume_from_checkpoint
 
@@ -274,7 +273,6 @@ if __name__ == '__main__':
 
         trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=early_stop_callback, checkpoint_callback=checkpoint_callback, logger=tt_logger, resume_from_checkpoint=resume_from_checkpoint)
         trainer.fit(rnModel)
-
         
         result = max(rnModel.valResults)
         accuList.append(result)
@@ -292,6 +290,3 @@ if __name__ == '__main__':
 
         
 #python SuperRNModel.py --intra --changeOrder --randomJointOrder 1 --epochs 20 --kfold 10
-
-
-

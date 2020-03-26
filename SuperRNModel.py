@@ -62,6 +62,9 @@ class SuperRNModel(pl.LightningModule):
         self.isInter = self.hparams.inter and not self.hparams.intra
         self.isIntra = not self.hparams.inter and self.hparams.intra
 
+        self.ones = torch.ones(1,2).cuda() if self.hparams.full_gpu else torch.ones(1,2)
+        self.zeros = torch.zeros(1,2).cuda() if self.hparams.full_gpu else torch.zeros(1,2)
+
         print('We are using:',hparams.dataset)
         if hparams.dataset == "PHYT":
             self.criterion = nn.BCELoss()
@@ -184,14 +187,18 @@ class SuperRNModel(pl.LightningModule):
         x,y = batch
         y = y.cuda() if self.hparams.full_gpu else y
         y_hat = self.forward(x)
-        ones = torch.ones(y.shape[0],y.shape[1]).cuda() if self.hparams.full_gpu else torch.ones(y.shape[0],y.shape[1])
-        zeros = torch.zeros(y.shape[0],y.shape[1]).cuda() if self.hparams.full_gpu else torch.zeros(y.shape[0],y.shape[1])
-        y_hat_rounded = torch.where(y_hat == torch.max(y_hat),ones,zeros)
-        
-        accu = torch.equal(y_hat_rounded,y)
+               
+        valAccuracy = []
+        for validated,label in zip(y_hat,y):
+          y_hat_rounded = torch.where(validated == torch.max(validated),self.ones,self.zeros).squeeze(0)
+          accu = torch.equal(y_hat_rounded,label)
+          valAccuracy.append(accu)
+
+        valAccuracy = sum(valAccuracy)/len(valAccuracy) if len(valAccuracy) != 0 else 0.0
+
         loss = self.criterion(y_hat.squeeze(), y.squeeze())
         tensorboard_logs = {'val_loss': loss}
-        return {'val_loss': loss, 'val_accu': accu, 'log': tensorboard_logs}
+        return {'val_loss': loss, 'val_accu': valAccuracy, 'log': tensorboard_logs}
 
     def validation_epoch_end(self, outputs):
         avg_accu = [x['val_accu'] for x in outputs]

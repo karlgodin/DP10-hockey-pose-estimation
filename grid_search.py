@@ -3,13 +3,13 @@ import sys
 import random
 
 def getGridSearch():
-    set = ['inter', 'intra']
-    patience = [10, 25, 50]
-    kfold = [5, 10, 15]
+    set = ['inter']
+    patience = [10, 25]
+    kfold = [5, 10]
     epochs = [300]
     lr = [0.0001, 0.00001, 0.000001]
-    batch_size = [1, 2, 4, 8, 16]
-    randomJointOrder = [1, 5, 10]
+    batch_size = [4, 8, 16]
+    randomJointOrder = [10]
     momentum = [0.1]
     nesterov = [True, False]
 
@@ -19,10 +19,10 @@ def getGridSearch():
     #optim = Adam
     combinationsAdam = it.product(*(set,patience,kfold,epochs,['Adam'],lr,batch_size,randomJointOrder))
     #optim = SGD
-    combinationsSGD = it.product(*(set,patience,kfold,epochs,['SGD'],lr,batch_size,randomJointOrder,momentum,nesterov))
+    #combinationsSGD = it.product(*(set,patience,kfold,epochs,['SGD'],lr,batch_size,randomJointOrder,momentum,nesterov))
     
     #concat lists
-    combinations = list(combinationsAdam) + list(combinationsSGD)
+    combinations = list(combinationsAdam)
     return list(combinations)
 
 if __name__ == '__main__':
@@ -48,14 +48,11 @@ if __name__ == '__main__':
         
         default_cmd = cmd_template + "--full_gpu "
         
-        if element[0] == 'intra':
-            default_cmd = default_cmd + "--intra"
-        elif element[0] == 'inter':
-            default_cmd = default_cmd + "--inter"
+        
+        cmdInter = default_cmd + "--inter" + " --changeOrder --dataset PHYT " + combHyperparams
+        cmdIntra = default_cmd + "--intra" + " --changeOrder --dataset PHYT " + combHyperparams
             
-        default_cmd = default_cmd +  " --changeOrder --dataset PHYT "
-        command = default_cmd + combHyperparams
-        outCommandList.append(command)
+        outCommandList.append((cmdInter,cmdIntra))
 
     random.seed(0) 
     random.shuffle(outCommandList)
@@ -70,6 +67,8 @@ if __name__ == '__main__':
     for member, commands in zip(members,outCommandLists):
         with open('GridSearchTODOs/TODO_%s.txt'%member,'w') as f:
             for cmd in commands:
-                f.write(cmd)
+                f.write(cmd[0]) #inter
+                f.write('\n')
+                f.write(cmd[1]) #intra
                 f.write('\n')
         

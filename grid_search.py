@@ -1,6 +1,7 @@
 import itertools as it
 import sys
 import random
+import os
 
 def getGridSearch():
     set = ['inter']
@@ -58,11 +59,21 @@ if __name__ == '__main__':
     random.shuffle(outCommandList)
     
     #Take only 30% of whole test
-    outCommandList = outCommandList[:int(len(outCommandList)*0.5)]
- 
+    outCommandList = outCommandList[:int(len(outCommandList))]
+    
+    #Remove commands already made
+    members = ['Marine2','Shawn2']
+    commandsAlreadyRan = []
+    for file in os.listdir('./GridSearchTODOs'):
+        if file in list(map(lambda x: "TODO_%s.txt"%x,members)):
+            continue
+        with open('./GridSearchTODOs/%s'%file) as f:
+            for line in f:
+                commandsAlreadyRan.append(line)
+    outCommandList = [lines for lines in outCommandList if lines[0] + '\n' not in commandsAlreadyRan]
+    
     #Write files for each team members
-    members = ['Karl','Marine','Shawn']
-    outCommandLists = [outCommandList[i::3] for i in range(len(members))]
+    outCommandLists = [outCommandList[i::len(members)] for i in range(len(members))]
     
     for member, commands in zip(members,outCommandLists):
         with open('GridSearchTODOs/TODO_%s.txt'%member,'w') as f:

@@ -19,6 +19,7 @@ if(not os.path.exists('../drive/My Drive/DesignProject/')):
 if(os.path.exists(DONEPath)):
     with open(DONEPath) as f:
         done = int(f.read())
+        done += 1
 else:
     done = 0
 

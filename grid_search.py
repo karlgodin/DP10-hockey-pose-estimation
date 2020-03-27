@@ -66,7 +66,7 @@ if __name__ == '__main__':
     
     for member, commands in zip(members,outCommandLists):
         with open('GridSearchTODOs/TODO_%s.txt'%member,'w') as f:
-            for cmd in commands:
+            for cmd in commands[:5]:
                 f.write(cmd[0]) #inter
                 f.write('\n')
                 f.write(cmd[1]) #intra

@@ -28,7 +28,9 @@ for cmd in cmds[done:10]:
     
     if(not os.path.exists('../drive/My Drive/DesignProject/GridSearchDONEs')):
         os.mkdir('../drive/My Drive/DesignProject/GridSearchDONEs')
-        
+    
+    done+=1
+
     with open(DONEPath,'w') as f:
         f.write(str(done))
-    done+=1
+    

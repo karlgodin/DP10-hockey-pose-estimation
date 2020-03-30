@@ -141,12 +141,21 @@ class SuperRNModel(pl.LightningModule):
         # REQUIRED
         x,y = batch
         y_hat = self.forward(x)
+
+        trainAccuracy = []
+        for validated, label in zip(y_hat, y):
+            y_hat_rounded = torch.where(validated == torch.max(validated), self.ones, self.zeros).squeeze(0)
+            accu = torch.equal(y_hat_rounded, label)
+            trainAccuracy.append(accu)
+
+        trainAccuracy = sum(trainAccuracy) / len(trainAccuracy) if len(trainAccuracy) != 0 else 0.0
+
         if self.hparams.dataset == "PHYT":
             loss = self.criterion(y_hat.squeeze(), y.squeeze())
         elif self.hparams.dataset == "SBU":
             loss = self.criterion(y_hat, torch.max(y, 1)[1])
 
-        tensorboard_logs = {'train_loss': loss}
+        tensorboard_logs = {'train_loss': loss, 'train_acc': trainAccuracy}
         return {'loss': loss, 'log': tensorboard_logs}
 
 
@@ -178,9 +187,9 @@ class SuperRNModel(pl.LightningModule):
                
         valAccuracy = []
         for validated,label in zip(y_hat,y):
-          y_hat_rounded = torch.where(validated == torch.max(validated),self.ones,self.zeros).squeeze(0)
-          accu = torch.equal(y_hat_rounded,label)
-          valAccuracy.append(accu)
+            y_hat_rounded = torch.where(validated == torch.max(validated),self.ones,self.zeros).squeeze(0)
+            accu = torch.equal(y_hat_rounded,label)
+            valAccuracy.append(accu)
 
         valAccuracy = sum(valAccuracy)/len(valAccuracy) if len(valAccuracy) != 0 else 0.0
 
@@ -201,7 +210,7 @@ class SuperRNModel(pl.LightningModule):
 
         self.valResults.append(avg_accu)
         print('\nAccuracy:',avg_accu)
-        tensorboard_logs = {'val_loss': avg_loss}
+        tensorboard_logs = {'val_loss': avg_loss, 'val_acc': avg_accu}
 
         return {'val_accu': avg_accu, 'val_loss': avg_loss, 'log': tensorboard_logs}
 

@@ -22,7 +22,7 @@ if(os.path.exists(DONEPath)):
 else:
     done = 0
 
-for cmd in cmds[done:10]:
+for cmd in cmds[done:]:
     print(cmd)
     subprocess.call(cmd,shell=True)
     

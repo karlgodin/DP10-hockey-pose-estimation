@@ -292,7 +292,7 @@ class PHYTDataset(torch.utils.data.Dataset):
         print('Size of Validation Set:',len(self.valclips))
         print('Size of Tests Set:',len(self.testclips))
         
-        for clipList, labelList in zip([self.clips,self.valclips],[self.y,self.valy]):
+        for clipList, labelList in zip([self.clips,self.valclips,self.testclips],[self.y,self.valy,self.testy]):
             #Data Augmentation. Changing Perp and Victim Place
             if(self.hparams.changeOrder):
                 for clipIdx in range(len(clipList)):
@@ -322,7 +322,7 @@ class PHYTDataset(torch.utils.data.Dataset):
         self.numOfJoints = len(self.clips[0])//2
 
         #Apply get combinations
-        for clipList, labelList in zip([self.clips,self.valclips],[self.y,self.valy]):
+        for clipList, labelList in zip([self.clips,self.valclips,self.testclips],[self.y,self.valy,self.testy]):
           for clipIdx in range(len(clipList)):
               clips = clipList[clipIdx]
               if(self.hparams.full_gpu):

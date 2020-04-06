@@ -267,7 +267,7 @@ if __name__ == '__main__':
       predList.append(predIdx.cpu().numpy().tolist()[0] == truthIdx.cpu().numpy().tolist())
 
 print('Test Accuracy for %s:'%versionNum, sum(predList)/len(predList))
-with open(folder+'/testAccuracy','w') as f:
+with open(folder+'/testAccuracy.txt','w') as f:
   f.write(str(sum(predList)/len(predList)))
 
 #python SuperRNModel.py --intra --changeOrder --randomJointOrder 1 --epochs 20 --kfold 10

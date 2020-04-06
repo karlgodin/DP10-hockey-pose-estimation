@@ -19,6 +19,7 @@ from pytorch_lightning.logging import TestTubeLogger
 
 import numpy as np
 import math
+import shlex
 
 
 
@@ -215,10 +216,37 @@ class SuperRNModel(pl.LightningModule):
         return {'val_accu': avg_accu, 'val_loss': avg_loss, 'log': tensorboard_logs}
 
 if __name__ == '__main__':
-    print(sys.argv)
-    qwertyu
-    hyperparams = parser.parse_args()
+    # use default args given by lightning
+    root_dir = os.path.split(os.path.dirname(sys.modules['__main__'].__file__))[0]
+    parent_parser = ArgumentParser(add_help=False)
+    version = None
+    
+    # allow model to overwrite or extend args
+    parser = add_model_specific_args(parent_parser, root_dir)
 
+    folder = sys.argv[1]
+    versionNum = folder.split('/')[-1]
+    checkpoint = [f for f in os.listdir(folder) if '_ckpt_epoch' in f ][0]
+
+    with open(folder +'/meta_tags.csv') as f:
+      next(f)
+      cmd = ''
+      for line in f:
+        key,value = line.strip().split(',')
+        if(value == 'True'):
+          cmd += '--{} '.format(key)
+        elif(value == 'False'):
+          pass
+        elif(value == ''):
+          pass
+        else:
+          cmd += '--{} {} '.format(key,value)
+
+    cmd += '--resume_from_checkpoint "{}"'.format(folder+'/%s'%checkpoint)
+    cmd = shlex.split(cmd)
+    hyperparams = parser.parse_args(cmd)
+
+    classifier.dataset.KFoldLength = hyperparams.kfold
     resume_from_checkpoint = hyperparams.resume_from_checkpoint
 
     #Check to see if inter or intra or inter+intra
@@ -229,42 +257,17 @@ if __name__ == '__main__':
         raise noTypeSelected("Must select at least one: --inter, --intra")
             
 
-    rnModel = SuperRNModel(hyperparams)
+    pretrainedModel = SuperRNModel.load_from_checkpoint(hyperparams.resume_from_checkpoint)
 
-    if version:
-        tt_logger = TestTubeLogger(
-            save_dir="../drive/My Drive/DesignProject/lightning_logs",
-            name="rel_net",
-            debug=False,
-            create_git_tag=False,
-            version=version
-        )
-    else:
-        tt_logger = TestTubeLogger(
-            save_dir="../drive/My Drive/DesignProject/lightning_logs",
-            name="rel_net",
-            debug=False,
-            create_git_tag=False
-        )
+    predList = []
+    for x,y in zip(pretrainedModel.dataset.testclips,pretrainedModel.dataset.testy):
+      y_hat = pretrainedModel.forward(x.unsqueeze(0))    
+      _,predIdx = y_hat.max(1)
+      _,truthIdx = y.max(0)
+      predList.append(predIdx.cpu().numpy().tolist()[0] == truthIdx.cpu().numpy().tolist())
 
-    early_stop_callback = EarlyStopping(
-        monitor='val_loss',
-        min_delta=0.01,
-        patience=hyperparams.patience,
-        verbose=False,
-        mode='min'
-    )
+print('Test Accuracy for %s:'%versionNum, sum(predList)/len(predList))
+with open(folder+'/testAccuracy','w') as f:
+  f.write(str(sum(predList)/len(predList)))
 
-    checkpoint_callback = ModelCheckpoint(
-        filepath=f'../drive/My Drive/DesignProject/lightning_logs/{tt_logger.name}/version_{tt_logger.experiment.version}/checkpoints',
-        verbose=False,
-        monitor='val_loss',
-        mode='min',
-        prefix=''
-    )
-
-    trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=early_stop_callback, checkpoint_callback=checkpoint_callback, logger=tt_logger, resume_from_checkpoint=resume_from_checkpoint)
-    trainer.fit(rnModel)
-
-        
 #python SuperRNModel.py --intra --changeOrder --randomJointOrder 1 --epochs 20 --kfold 10

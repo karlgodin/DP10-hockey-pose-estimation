@@ -104,6 +104,7 @@ def get_combinations_intra(p1: torch.FloatTensor):
 
 def generatorKFold(sizeOfElem,k=KFoldLength):
     indexes = [i for i in range(sizeOfElem)]
+    random.seed(0)
     random.shuffle(indexes)
     if(k == 1):
         yield indexes, []
@@ -279,8 +280,10 @@ class PHYTDataset(torch.utils.data.Dataset):
         self.y = [self.y[i] for i in sets['train']]
         
         global kFoldGenerator
-        if(kFoldGenerator is None):
+        if(kFoldGenerator is None and hparams.kfold != 1):
             kFoldGenerator = generatorKFold(len(self.clips), k=hparams.kfold)
+        else:
+            kFoldGenerator = list(range(self.clips)), []
         train_index, test_index = next(kFoldGenerator)
         self.valclips = [self.clips[i] for i in test_index]
         self.clips = [self.clips[i] for i in train_index]
@@ -345,7 +348,10 @@ class PHYTDataset(torch.utils.data.Dataset):
                     input_data_clip_combinations_P1 = input_data_clip_combinations_P1.cuda()
                     input_data_clip_combinations_P2 = input_data_clip_combinations_P2.cuda()
                 clipList[clipIdx] = (input_data_clip_combinations_P1.squeeze(0),input_data_clip_combinations_P2.squeeze(0))
-
+        
+        print('Size of Training Set:',len(self.clips))
+        print('Size of Validation Set:',len(self.valclips))
+        print('Size of Tests Set:',len(self.testclips))
     def __len__(self):
         return len(self.clips)
 

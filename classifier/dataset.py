@@ -101,6 +101,11 @@ def get_combinations_intra(p1: torch.FloatTensor):
         outputs[count] = output
     return outputs
 
+def chunker(seq, size):
+    if(seq is not None):
+        return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+    else:
+        return []
 
 def generatorKFold(sizeOfElem,k=KFoldLength):
     indexes = [i for i in range(sizeOfElem)]
@@ -116,7 +121,7 @@ def generatorKFold(sizeOfElem,k=KFoldLength):
             yield train, test
 
 
-def parse_PHYT_clip(file_name: str):
+def parse_PHYT_clip(file_name: str,no_interpolation):
     with open(file_name) as json_file:
         data = json.load(json_file)
 
@@ -127,16 +132,22 @@ def parse_PHYT_clip(file_name: str):
             perp = frame["perp"]
             victim = frame["victim"]
 
-            # TODO: add boolean to keep or remove confidence parameter
-            # del perp[2::3]
-            # del victim[2::3]
+            if(no_interpolation):
+                PlayerList = [perp,victim]
+                for i,player in enumerate(PlayerList):
+                  tempList = []
+                  for x,y,c in chunker(player,3):
+                    tempList.append(x if c != 0.0 else 0.0)
+                    tempList.append(y if c != 0.0 else 0.0)
+                    tempList.append(c)
+                  PlayerList[i] = tempList
+                perp,victim = PlayerList
 
             perp_frames.append(perp)
             victim_frames.append(victim)
 
         perp_frames = np.array(perp_frames, dtype=np.float32)
         victim_frames = np.array(victim_frames, dtype=np.float32)
-
 
         num_frames = perp_frames.shape[0]
 
@@ -246,7 +257,7 @@ class PHYTDataset(torch.utils.data.Dataset):
         tempLabels = []
         
         for input_name,output_name in zip(inputFiles,outputFiles):
-            perp, victim = parse_PHYT_clip(input_name)            
+            perp, victim = parse_PHYT_clip(input_name,hparams.no_interpolation)            
             for (p1,p2) in [[perp,victim]]:
                 self.clips.append(np.concatenate((p1, p2)))
                 
@@ -280,10 +291,8 @@ class PHYTDataset(torch.utils.data.Dataset):
         self.y = [self.y[i] for i in sets['train']]
         
         global kFoldGenerator
-        if(kFoldGenerator is None and hparams.kfold != 1):
+        if(kFoldGenerator is None):
             kFoldGenerator = generatorKFold(len(self.clips), k=hparams.kfold)
-        else:
-            kFoldGenerator = list(range(self.clips)), []
         train_index, test_index = next(kFoldGenerator)
         self.valclips = [self.clips[i] for i in test_index]
         self.clips = [self.clips[i] for i in train_index]
@@ -349,6 +358,7 @@ class PHYTDataset(torch.utils.data.Dataset):
                     input_data_clip_combinations_P2 = input_data_clip_combinations_P2.cuda()
                 clipList[clipIdx] = (input_data_clip_combinations_P1.squeeze(0),input_data_clip_combinations_P2.squeeze(0))
         
+        print('\nAfter DataAugmentation:')
         print('Size of Training Set:',len(self.clips))
         print('Size of Validation Set:',len(self.valclips))
         print('Size of Tests Set:',len(self.testclips))

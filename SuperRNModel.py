@@ -19,6 +19,7 @@ from pytorch_lightning.logging import TestTubeLogger
 
 import numpy as np
 import math
+import pickle
 
 
 
@@ -37,6 +38,7 @@ def add_model_specific_args(parent_parser, root_dir):
 
     # training params (opt)
     parser.add_argument('--patience', default=4, type=int)
+    parser.add_argument('--no_interpolation', action='store_true')
     parser.add_argument('--kfold', default=1, type=int)
     parser.add_argument('--epochs', default=10, type=int)
     parser.add_argument('--optim', default='Adam', type=str)
@@ -91,6 +93,7 @@ class SuperRNModel(pl.LightningModule):
             #Init FModel
             sizeFInput = 2 * math.factorial(numOfJoints)//math.factorial(2)//math.factorial(numOfJoints - 2)
             self.f_model = FPhi(hparams)
+
 
     def forward(self, x):
         # numpy matrix of all combination of inter joints
@@ -232,13 +235,14 @@ if __name__ == '__main__':
             def __init__(self,s):
                 pass
         raise noTypeSelected("Must select at least one: --inter, --intra")
-            
-    accuList = []
-    earlyBreak = False
+
+    #Delete function definitions that relate to validation set if kfold = 1
     if(hyperparams.kfold == 1):
-        hyperparams.kfold = 10
-        earlyBreak = True
-        
+      del(SuperRNModel.val_dataloader)
+      del(SuperRNModel.validation_step)
+      del(SuperRNModel.validation_epoch_end)
+
+    accuList = []  
     classifier.dataset.KFoldLength = hyperparams.kfold
     for i in range(classifier.dataset.KFoldLength):
         #Set Seeds
@@ -263,38 +267,40 @@ if __name__ == '__main__':
                 create_git_tag=False
             )
 
-        early_stop_callback = EarlyStopping(
-            monitor='val_loss',
-            min_delta=0.01,
-            patience=hyperparams.patience,
-            verbose=False,
-            mode='min'
-        )
-
-        checkpoint_callback = ModelCheckpoint(
+        if(hyperparams.kfold != 1):
+          early_stop_callback = EarlyStopping(
+              monitor='val_loss',
+              min_delta=0.01,
+              patience=hyperparams.patience,
+              verbose=False,
+              mode='min'
+          )
+          checkpoint_callback = ModelCheckpoint(
             filepath=f'../drive/My Drive/DesignProject/lightning_logs/{tt_logger.name}/version_{tt_logger.experiment.version}/checkpoints',
             verbose=False,
             monitor='val_loss',
             mode='min',
             prefix=''
         )
+        else:
+          early_stop_callback = False
+          checkpoint_callback = False        
 
         trainer = Trainer(max_nb_epochs=hyperparams.epochs, early_stop_callback=early_stop_callback, checkpoint_callback=checkpoint_callback, logger=tt_logger, resume_from_checkpoint=resume_from_checkpoint)
         trainer.fit(rnModel)
         
-        result = max(rnModel.valResults)
-        accuList.append(result)
-        if(earlyBreak):
-            break
-        else:           
-            print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),result)
+        if(hyperparams.kfold != 1):
+          result = max(rnModel.valResults)
+          accuList.append(result)          
+          print('KFold %d/%d: Accuracy = '%(i,classifier.dataset.KFoldLength),result)
 
     print('Done!')
 
-
-
-    if(len(accuList) > 0):
+    if(len(accuList) > 0 and hyperparams.kfold != 1):
         print('Global Accuracy:',sum(accuList)/len(accuList))
 
-        
+    #Save model
+    if(hyperparams.kfold == 1):
+      savedir = f'../drive/My Drive/DesignProject/lightning_logs/{tt_logger.name}/version_{tt_logger.experiment.version}/model.save'
+      torch.save(rnModel.state_dict(),savedir)
 #python SuperRNModel.py --intra --changeOrder --randomJointOrder 1 --epochs 20 --kfold 10

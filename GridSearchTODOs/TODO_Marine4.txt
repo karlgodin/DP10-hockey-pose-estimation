@@ -1,0 +1,2 @@
+python SuperRNModel.py --full_gpu --inter --changeOrder --dataset PHYT --patience 25 --kfold 10 --epochs 300 --optim Adam --lr 1.0000000000000001e-07 --batch_size 1 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --intra --changeOrder --dataset PHYT --patience 25 --kfold 10 --epochs 300 --optim Adam --lr 1.0000000000000001e-07 --batch_size 1 --randomJointOrder 10

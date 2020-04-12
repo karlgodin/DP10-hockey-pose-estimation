@@ -1,0 +1,10 @@
+python SuperRNModel.py --full_gpu --inter --changeOrder --dataset PHYT --patience 10 --kfold 10 --epochs 300 --optim Adam --lr 1e-06 --batch_size 16 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --intra --changeOrder --dataset PHYT --patience 10 --kfold 10 --epochs 300 --optim Adam --lr 1e-06 --batch_size 16 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --inter --changeOrder --dataset PHYT --patience 25 --kfold 5 --epochs 300 --optim Adam --lr 1e-06 --batch_size 4 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --intra --changeOrder --dataset PHYT --patience 25 --kfold 5 --epochs 300 --optim Adam --lr 1e-06 --batch_size 4 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --inter --changeOrder --dataset PHYT --patience 10 --kfold 5 --epochs 300 --optim Adam --lr 1e-05 --batch_size 4 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --intra --changeOrder --dataset PHYT --patience 10 --kfold 5 --epochs 300 --optim Adam --lr 1e-05 --batch_size 4 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --inter --changeOrder --dataset PHYT --patience 25 --kfold 10 --epochs 300 --optim Adam --lr 1e-06 --batch_size 8 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --intra --changeOrder --dataset PHYT --patience 25 --kfold 10 --epochs 300 --optim Adam --lr 1e-06 --batch_size 8 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --inter --changeOrder --dataset PHYT --patience 10 --kfold 10 --epochs 300 --optim Adam --lr 1e-06 --batch_size 8 --randomJointOrder 10
+python SuperRNModel.py --full_gpu --intra --changeOrder --dataset PHYT --patience 10 --kfold 10 --epochs 300 --optim Adam --lr 1e-06 --batch_size 8 --randomJointOrder 10

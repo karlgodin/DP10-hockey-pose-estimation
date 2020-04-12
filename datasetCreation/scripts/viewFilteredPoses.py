@@ -19,7 +19,7 @@ if __name__ == '__main__':
             filePaths.append('%s/%s'%(dir,clipID))
     
     terminate = False
-    clipIdx = 0
+    clipIdx = 25
     while(clipIdx < len(filePaths)):
         clipName = filePaths[clipIdx]
         phytType = clipName.split('/')[0]
